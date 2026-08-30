@@ -94,6 +94,19 @@ $$
 取 $x = \pi$，便回到五个数的聚会。
 :::
 
+## 自定义命令（\newcommand）
+
+在文章里用 `:::macros` 块定义自己的简写，全文生效：
+
+:::macros
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\GL}[1]{\mathrm{GL}_{#1}}
+\def\eps{\varepsilon}
+:::
+
+比如 $\RR^n$ 是 $n$ 维实空间，$\norm{v}$ 是范数，$\GL{2}$ 是一般线性群，$\eps$ 是小正数。全站通用的 $\R$、$\C$、$\Z$、$\Q$、$\F$、$\norm$、$\abs$ 已预置在 `assets/config.js`，直接使用即可。
+
 ## 一点注记
 
 - 也有人把它写成 $e^{i\pi} = -1$，这省略了 $0$ 与 $1$。

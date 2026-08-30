@@ -60,6 +60,7 @@ git push
 | 块级公式 | `$$ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi} $$` |
 | 多行公式（align* 等） | `$$ \begin{align*} a &= b + c \\ &= d \end{align*} $$`（工具栏 `env` 按钮一键插入） |
 | 行内（LaTeX 风格） | `\(x_i\)` |
+| 自定义宏 | `:::macros` 块里写 `\newcommand{\R}{\mathbb{R}}`，全文生效（见下文「自定义宏」） |
 | 定理环境 | `:::theorem 费马小定理` … `:::`（支持 theorem/lemma/proposition/corollary/definition/proof/remark/example/conjecture/claim，自动编号；工具栏 `∎` 一键插入） |
 | 块级（LaTeX 风格） | `\[ \dim \mathcal{M}_g = 3g-3 \]` |
 | AoPS 风格 | `[math]a^2+b^2=c^2[/math]`，多行 `[math]...[/math]` 自动按块级 |
@@ -73,6 +74,26 @@ git push
 - **数学环境必须放在块级公式里**：`\begin{align*}...\end{align*}` 要包在 `$$...$$` 或 `\[...\]` 中（工具栏 `env` 按钮自动完成），裸写不会被识别
 - 数学符号直接写 LaTeX 命令即可：`\infty`、`\sum`、`\int`、`\mathbb{R}`、`\alpha` 等
 - 想新建文章但标题是中文时，文件名会退化为 `post-日期`，建议用 `--slug` 指定英文名
+
+### 自定义宏（\newcommand，节省体力）
+
+像 LaTeX 一样自定义命令，全文生效。在文章任意位置写一个 `:::macros` 块：
+
+```markdown
+:::macros
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\GL}[1]{\mathrm{GL}_{#1}}
+\def\eps{\varepsilon}
+:::
+```
+
+然后正文里直接写 `$\RR^n$`、`$\norm{v}$`、`$\GL{2}$`、`$\eps$`。
+
+- 支持 `\newcommand`、`\renewcommand`、`\def` 三种写法，支持带参数宏（`[1]` + `#1`）
+- 宏块本身不会显示在文章里
+- 全站通用宏（`\R \C \N \Z \Q \F \norm \abs`）已在 `assets/config.js` 的 `katexMacros` 里预置，可直接用；单篇文章的定义会覆盖全局
+- 代码块里的 `\newcommand` 不会被解析
 
 ### 定理环境
 

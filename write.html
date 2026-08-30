@@ -444,8 +444,9 @@
     if (!body.trim()){ showMsg(I18N.t('need_body'), 'err'); return; }
     window.LIBS.load(function(ok){
       if (!ok){ showMsg(I18N.t('load_fail'), 'err'); return; }
-      pv.innerHTML = window.LIBS.renderMarkdown(body, I18N.lang);
-      window.LIBS.renderMathIn(pv);
+      var res = window.LIBS.renderMarkdown(body, { lang: I18N.lang, macros: cfg.katexMacros || {} });
+      pv.innerHTML = res.html;
+      window.LIBS.renderMathIn(pv, res.macros);
       var modal = $('preview-modal');
       modal.hidden = false;
       document.body.style.overflow = 'hidden';   /* 锁定背景滚动 */

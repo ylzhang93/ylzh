@@ -14,6 +14,19 @@ window.SITE_CONFIG = {
      由 GitHub Token 保证（见 README）。留空则直接显示编辑器。 */
   editorKey: '',
 
+  /* 全站 LaTeX 自定义宏（KaTeX macros）：写 \R 就是 \mathbb{R}。
+     也可以只在一篇文章里用 :::macros 块定义（见 README「自定义宏」）。 */
+  katexMacros: {
+    '\\R': '\\mathbb{R}',
+    '\\C': '\\mathbb{C}',
+    '\\N': '\\mathbb{N}',
+    '\\Z': '\\mathbb{Z}',
+    '\\Q': '\\mathbb{Q}',
+    '\\F': '\\mathcal{F}',
+    '\\norm': '\\left\\lVert #1 \\right\\rVert',
+    '\\abs': '\\left\\lvert #1 \\right\\rvert'
+  },
+
   /* 评论区（giscus，基于 GitHub Discussions，访客用 GitHub 账号即可回复）
      启用步骤见 README「评论与回复」：
      1. 仓库 Settings → Features 启用 Discussions

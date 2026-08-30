@@ -72,11 +72,36 @@
   /* LaTeX 风格 \begin{theorem}[标题] ... \end{theorem}（只认定理类环境，不碰数学环境） */
   var THM_LATEX_RE = /\\begin\{(theorem|lemma|proposition|corollary|definition|proof|remark|example|conjecture|claim)\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{\1\}/g;
 
-  /* Markdown → 安全 HTML（公式已还原为 $…$ 文本，未做 KaTeX 排版） */
-  function renderMarkdown(md, lang){
-    lang = (lang === 'en') ? 'en' : 'zh';
+  /* 解析一行 \newcommand / \def 宏定义 → { 命令名: 定义 } */
+  function parseMacroLine(line){
+    line = line.trim();
+    if (!line || line.charAt(0) !== '\\') return null;
+    var m;
+    m = /^\\(?:re)?newcommand\*?\{\\?([a-zA-Z]+)\}(?:\[\d+\])?\{([\s\S]*)\}$/.exec(line);
+    if (m) return { name: '\\' + m[1], def: m[2] };
+    m = /^\\def\\?([a-zA-Z]+)\{([\s\S]*)\}$/.exec(line);
+    if (m) return { name: '\\' + m[1], def: m[2] };
+    return null;
+  }
+
+  /* Markdown → { html, macros }（公式已还原为 $…$ 文本，未做 KaTeX 排版）
+     opts: { lang, macros } —— macros 为全局宏表（config.js katexMacros） */
+  function renderMarkdown(md, opts){
+    opts = opts || {};
+    var lang = opts.lang === 'en' ? 'en' : 'zh';
+    var macros = {};
+    var base = opts.macros || {};
+    Object.keys(base).forEach(function(k){ macros[k] = base[k]; });
     var mathSpans = [];
     function protectSeg(seg){
+      /* 自定义宏 :::macros ... ::: 块：解析并移除（不渲染） */
+      seg = seg.replace(/^:::macros[ \t]*\n([\s\S]*?)^:::[ \t]*\n?/gm, function(_, body){
+        body.split('\n').forEach(function(line){
+          var parsed = parseMacroLine(line);
+          if (parsed) macros[parsed.name] = parsed.def;
+        });
+        return '';
+      });
       /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
       seg = seg.replace(THM_RE, function(_, type, title, body){
         var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
@@ -119,13 +144,13 @@
     html = html.replace(/\u27E6(\d+)\u27E7/g, function(_, i){
       return escapeHtml(mathSpans[+i]);   /* & < > 转义，KaTeX 从文本节点读回原字符 */
     });
-    return window.DOMPurify.sanitize(html);
+    return { html: window.DOMPurify.sanitize(html), macros: macros };
   }
 
-  /* 对容器内公式做 KaTeX 排版 */
-  function renderMathIn(el){
+  /* 对容器内公式做 KaTeX 排版（macros 为自定义宏表） */
+  function renderMathIn(el, macros){
     if (!window.renderMathInElement) return;
-    renderMathInElement(el, {
+    var opts = {
       delimiters: [
         {left: '$$', right: '$$', display: true},
         {left: '$', right: '$', display: false},
@@ -133,7 +158,9 @@
         {left: '\\(', right: '\\)', display: false}
       ],
       throwOnError: false
-    });
+    };
+    if (macros && Object.keys(macros).length) opts.macros = macros;
+    renderMathInElement(el, opts);
   }
 
   /* giscus 评论区：按文章注入脚本（term 唯一标识 → 一篇一个 Discussion）
