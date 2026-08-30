@@ -301,6 +301,11 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
 .chip:hover{background:rgba(47,74,107,.16)}
 .chip::after{content:"×";margin-left:.45em;opacity:.6}
 .filename-hint{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin-top:.4rem;word-break:break-all}
+.token-link{
+  font-family:var(--sans);font-size:.78rem;color:var(--accent);text-decoration:none;
+  border-bottom:1px solid rgba(47,74,107,.35);
+}
+.token-link:hover{border-bottom-color:var(--accent)}
 
 .actions{display:flex;gap:.8rem;flex-wrap:wrap;margin:1.6rem 0 1rem}
 .btn{
@@ -332,6 +337,20 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
   text-decoration:none;transition:color .3s;
 }
 .write-link:hover{color:var(--ink-soft)}
+
+/* ---------- ＋ 写日志按钮 ---------- */
+.plus-btn{
+  display:inline-flex;align-items:center;gap:.5rem;margin-top:1.6rem;
+  font-family:var(--sans);font-size:.8rem;letter-spacing:.14em;
+  color:var(--accent);border:1px solid rgba(47,74,107,.4);border-radius:99px;
+  padding:.5rem 1.3rem;text-decoration:none;transition:background .3s,color .3s;
+}
+.plus-btn:hover{background:var(--accent);color:var(--paper)}
+
+/* ---------- 评论区 ---------- */
+.comments-section{margin-top:3.5rem;padding-top:.5rem}
+.comments-section .sec{margin-bottom:1.2rem}
+.comments-note{margin-bottom:1.4rem;color:var(--ink-soft);font-size:.85rem;font-style:italic}
 
 /* ---------- 页脚 ---------- */
 footer{

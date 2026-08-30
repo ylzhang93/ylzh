@@ -77,7 +77,11 @@
       searching: '搜索中…',
       search_ph: '搜索标题、标签或正文…',
       all_tags: '全部',
-      no_results: '没有匹配的文章'
+      no_results: '没有匹配的文章',
+      plus_new: '写日志',
+      comments_title: '评论',
+      comments_note: '回复需要 GitHub 账号，登录后即可跟帖。',
+      token_link: '创建令牌 →'
     },
 
     en: {
@@ -145,7 +149,11 @@
       searching: 'Searching…',
       search_ph: 'Search titles, tags or text…',
       all_tags: 'All',
-      no_results: 'No matching posts'
+      no_results: 'No matching posts',
+      plus_new: 'New Post',
+      comments_title: 'Comments',
+      comments_note: 'Replies require a GitHub account.',
+      token_link: 'Create a token →'
     }
   };
 

@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/i18n.js"></script>
+<script src="assets/config.js"></script>
 <script src="assets/libs.js"></script>
 </head>
 
@@ -34,6 +35,11 @@
   <article id="post" class="post">
     <p class="empty" data-i18n="loading">正在加载…</p>
   </article>
+  <section id="comments" class="comments-section" hidden>
+    <h2 class="sec" data-i18n="comments_title">评论</h2>
+    <p class="comments-note" data-i18n="comments_note">回复需要 GitHub 账号，登录后即可跟帖。</p>
+    <div id="comments-box"></div>
+  </section>
   <nav id="post-nav" class="post-nav" aria-label="上一篇下一篇"></nav>
 </main>
 
@@ -56,13 +62,23 @@
   }
 
   var state = { posts: [], file: null, entry: null, md: '' };
+  var cfg = window.SITE_CONFIG || {};
+  var commentsLoaded = false;
 
   /* 标题按语言取：title_zh / title_en，缺省回退到 title */
   function titleFor(p){
     return (I18N.lang === 'zh' ? p.title_zh : p.title_en) || p.title || '';
   }
 
-  /* 语言切换时更新：页面标题 + 上一篇/下一篇 */
+  /* 评论区：一篇一个 Discussion（term = 文章路径） */
+  function refreshComments(){
+    var sec = document.getElementById('comments');
+    var ok = window.LIBS.loadComments(cfg, state.file, I18N.lang, document.getElementById('comments-box'));
+    sec.hidden = !ok;
+    commentsLoaded = ok;
+  }
+
+  /* 语言切换时更新：页面标题 + 上一篇/下一篇 + 评论区语言 */
   window.onLangChange = function(){
     if (!state.file) return;
     var entry = state.entry;
@@ -85,6 +101,7 @@
         : '<span></span>';
       navEl.innerHTML = left + right;
     }
+    if (commentsLoaded) refreshComments();   /* 评论界面语言跟随切换 */
   };
 
   function renderPost(){
@@ -143,6 +160,7 @@
         window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
 
         window.LIBS.renderMathIn(article);
+        refreshComments();       /* 评论区（配置了就显示） */
         window.scrollTo(0, 0);
       }).catch(function(){
         article.innerHTML =

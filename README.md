@@ -84,20 +84,41 @@ git push
 
 ## 网页在线写作（write.html）
 
-在浏览器里直接写博客，发布后 GitHub Pages 自动更新。
+在浏览器里直接写博客，发布后 GitHub Pages 自动更新。博客页头部有 **「＋ 写日志」** 按钮（QQ 空间式），点击直达新文章编辑。
 
-1. **配置**：打开 `assets/config.js`，填入你的 GitHub 用户名（`owner`）、仓库名（`repo`）；`editorKey` 设置一个只有你知道的口令（见下方权限说明）
-2. **打开写作页**：`write.html`（页脚有"写作"入口）。输入口令解锁编辑器
-3. **填写**：标题、英文标题（可选）、标签（回车添加多个）、文件名 slug（自动生成可改）、正文（Markdown + LaTeX，右侧有实时预览）、GitHub Token
-4. **保存发布**：文章直接通过 GitHub API 写入仓库（提交到 `main` 分支），一两分钟后博客页可见
+### 用令牌发一篇 blog（完整流程）
+
+1. **创建令牌**（只做一次）：GitHub → Settings → Developer settings → Personal access tokens → Generate new token → 勾选 `repo`（经典令牌）或 fine-grained 令牌勾选 `Contents: Read and write` → 生成后**复制**（只显示一次）
+2. **打开写作页**：博客页点「＋ 写日志」（即 `write.html?new=1`），输入口令解锁
+3. **填写**：标题、英文标题（可选）、标签（回车添加）、正文（Markdown + LaTeX，自动实时预览）
+4. **粘贴令牌**：粘到「GitHub Token」输入框（只保存在你的浏览器 localStorage）
+5. **保存发布**：文章通过 GitHub API 写入仓库 `posts/` 并更新清单，一两分钟后博客页可见；成功后点消息里的链接直接看文章
+6. 下次发帖不用再填令牌（已记住）；换电脑/浏览器需重新粘贴
+
+### 编辑 / 删除
+
+写作页顶部「编辑已有文章」下拉框选择文章 → 自动载入 → 改完点保存；「删除文章」按钮可删除整篇。
 
 ### 权限说明（为什么只有你能写）
 
 - 写入操作需要 **GitHub Token**（Personal Access Token，简称 PAT），它等效于仓库的写权限——**只有持有你令牌的人才能改仓库**，访客没有令牌，只能看
-- 令牌创建：GitHub → Settings → Developer settings → Personal access tokens → Generate new token，勾选 `repo`（经典令牌）或 fine-grained 令牌的 `Contents: Read and write`
 - 令牌只保存在**你自己的浏览器 localStorage** 里，不会上传到任何服务器，也绝不写进代码/仓库
-- 写作页的"口令"是写在网页源码里的**隐私帘**：只用来挡住偶然点进来的访客，不构成真正的安全边界——真正的权限由 GitHub 保证。如果想完全隐藏写作入口，删掉页脚的"写作"链接即可
+- 写作页的"口令"是写在网页源码里的**隐私帘**：只用来挡住偶然点进来的访客，不构成真正的安全边界——真正的权限由 GitHub 保证。如果想完全隐藏写作入口，删掉页脚的"写作"链接和博客页的「＋」按钮即可
 - 注意：令牌 = 仓库写权限，泄露等于把仓库交给别人，不要分享
+
+### 评论与回复（giscus，AoPS 论坛式）
+
+文章页底部有评论区：访客用 **GitHub 账号**登录即可**跟帖回复**，支持**嵌套楼层**（基于 GitHub Discussions，类似论坛的回复串）。站长零服务器、零成本。
+
+启用步骤：
+
+1. **启用 Discussions**：仓库 → Settings → Features → 打开 Discussions
+2. **安装 giscus**：打开 https://github.com/apps/giscus → Install → 选择你的仓库
+3. **获取配置**：打开 https://giscus.app → 填入你的仓库 → 选择一个分类（如 `Announcements`）→ 页面会生成 repo-id 和 category-id
+4. **填入配置**：编辑 `assets/config.js` 的 `comments` 块，把 `enabled` 改为 `true`，填入 `repo`（形如 `用户名/仓库名`）、`repoId`、`category`、`categoryId`
+5. 可选：`strict: true` 表示仅仓库协作者能评论（默认 `false`，任何 GitHub 账号都能回复）
+
+原理：每篇文章用它的文件路径作为唯一标识，对应一个独立的 Discussion——回复会自动归档在仓库的 Discussions 里，不会丢。
 
 ### 搜索与标签
 

@@ -103,9 +103,39 @@
     });
   }
 
+  /* giscus 评论区：按文章注入脚本（term 唯一标识 → 一篇一个 Discussion）
+     返回 true 表示已注入；配置未就绪返回 false */
+  function loadComments(cfg, term, lang, container){
+    var c = cfg && cfg.comments;
+    if (!c || !c.enabled || !c.repo || !c.repoId || !c.categoryId) return false;
+    container.innerHTML = '';
+    var s = document.createElement('script');
+    s.src = 'https://giscus.app/client.js';
+    s.async = true;
+    var attrs = {
+      'data-repo': c.repo,
+      'data-repo-id': c.repoId,
+      'data-category': c.category || 'Announcements',
+      'data-category-id': c.categoryId,
+      'data-mapping': 'specific',
+      'data-term': term,
+      'data-strict': c.strict ? '1' : '0',
+      'data-reactions-enabled': '1',
+      'data-emit-metadata': '0',
+      'data-input-position': 'bottom',
+      'data-theme': 'light',
+      'data-lang': lang === 'zh' ? 'zh-CN' : 'en',
+      'data-loading': 'lazy'
+    };
+    Object.keys(attrs).forEach(function(k){ s.setAttribute(k, attrs[k]); });
+    container.appendChild(s);
+    return true;
+  }
+
   window.LIBS = {
     load: load,
     renderMarkdown: renderMarkdown,
-    renderMathIn: renderMathIn
+    renderMathIn: renderMathIn,
+    loadComments: loadComments
   };
 })();

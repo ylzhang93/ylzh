@@ -87,6 +87,7 @@
       <label data-i18n="token_lbl">GitHub Token</label>
       <input id="f-token" type="password" autocomplete="off">
       <p class="filename-hint" data-i18n="token_help">需要仓库 contents 读写权限</p>
+      <p class="filename-hint"><a id="token-link" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" data-i18n="token_link">创建令牌 →</a></p>
     </div>
 
     <div class="actions">
@@ -250,15 +251,26 @@
       });
   }
 
+  /* ---------- 新建 / 重置表单 ---------- */
+  function resetForm(){
+    editing = null;
+    $('f-existing').value = '';
+    $('f-title').value = '';
+    $('f-title-en').value = '';
+    $('f-body').value = '';
+    $('f-slug').value = '';
+    slugTouched = false;
+    tags = [];
+    renderChips();
+    $('btn-delete').hidden = true;
+    $('preview').hidden = true;
+    updateFilename();
+  }
+
   $('f-existing').addEventListener('change', function(){
     var file = this.value;
     if (!file){
-      editing = null;
-      $('f-title').value = ''; $('f-title-en').value = '';
-      $('f-body').value = ''; $('f-slug').value = ''; slugTouched = false;
-      tags = []; renderChips();
-      $('btn-delete').hidden = true;
-      updateFilename();
+      resetForm();
       return;
     }
     fetch(file).then(function(r){ return r.ok ? r.text() : ''; }).then(function(md){
@@ -437,7 +449,13 @@
     if (token) $('f-token').value = token;
     loadExistingList();
     updateFilename();
-    $('f-existing').dispatchEvent(new Event('change'));
+    var sp = new URLSearchParams(location.search);
+    if (sp.get('new') === '1'){
+      resetForm();              /* 博客页 ＋ 按钮：直接开始新文章 */
+      $('f-title').focus();
+    } else {
+      $('f-existing').dispatchEvent(new Event('change'));
+    }
   }
 })();
 </script>
