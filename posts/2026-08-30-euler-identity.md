@@ -1,6 +1,6 @@
 # 欧拉恒等式：五个数的聚会
 
-> 这是一篇示例文章，演示博客的写作方式。看完后可以删除：`posts/2026-08-30-euler-identity.md`，并更新 `posts/index.json`。
+> 这是一篇示例文章，演示博客的写作方式（多行公式、折叠解答、AoPS 标签等）。看完后可以删除：`posts/2026-08-30-euler-identity.md`，并更新 `posts/index.json`。
 
 欧拉恒等式把数学里五个最著名的常数聚在一起：
 
@@ -15,6 +15,58 @@ e^{ix} = \cos x + i\sin x
 $$
 
 代入 $x = \pi$，便得到 $\cos\pi = -1$ 与 $\sin\pi = 0$。
+
+## 多行推导（align* 环境）
+
+用 `align*` 对齐每一步——注意要用工具栏的 `env` 按钮，或手写时把环境包在 `$$…$$` 里：
+
+$$
+\begin{align*}
+e^{i\pi} &= \cos\pi + i\sin\pi \\
+         &= -1 + i \cdot 0 \\
+         &= -1
+\end{align*}
+$$
+
+两个方向同时写，还能得到欧拉公式的共轭对（cases 环境）：
+
+$$
+\begin{cases}
+e^{ix} = \cos x + i\sin x \\
+e^{-ix} = \cos x - i\sin x
+\end{cases}
+$$
+
+把它们相加相减，就推出：
+
+$$
+\cos x = \frac{e^{ix} + e^{-ix}}{2}, \qquad
+\sin x = \frac{e^{ix} - e^{-ix}}{2i}
+$$
+
+## 隐藏解答（点击展开）
+
+网页原生的折叠块，等价于 AoPS 论坛的 `\hide`——点击「解答」才展开：
+
+<details>
+<summary>点击查看解答：证明 $e^{i\pi} = -1$</summary>
+
+由幂级数定义：
+
+$$
+e^{z} = \sum_{n=0}^{\infty} \frac{z^n}{n!}
+$$
+
+代入 $z = ix$，实部与虚部分别收敛到 $\cos x$ 与 $\sin x$。取 $x = \pi$：
+
+- $\cos\pi = -1$
+- $\sin\pi = 0$
+
+于是 $e^{i\pi} = -1$，即 $e^{i\pi} + 1 = 0$。□
+
+</details>
+
+> 提示：`<summary>` 与内容之间、内容与 `</details>` 之间各留一个空行，内部的 Markdown 与公式才会正常解析。
 
 ## 一点注记
 
