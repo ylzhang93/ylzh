@@ -222,7 +222,6 @@ git push -u origin main
 - 名字：首屏 `<h1 class="name">`（`zyl` 和中文名）
 - 邮箱：联系区 `mailto:` 链接
 - GitHub 链接：创建账号后把地址换成你的用户名
-- 照片：替换 `source/img/wuzhu.jpg`
 - 公式：KaTeX 语法，行内 `\(...\)`、块级 `\[...\]`
 
 ## 目录结构
@@ -239,6 +238,6 @@ assets/search.js    搜索 / 标签 / slug 工具
 assets/config.js    站点配置（owner / repo / 写作口令）
 posts/              博客文章（.md）与清单（index.json）
 new_post.py         发帖脚本（命令行备选，python new_post.py "标题"）
-source/img/         照片
+source/img/         （已移除照片；如需放图，图片放这里）
 legacy/             旧版网站归档（仅本地保留，不推送，确认后可删除）
 ```

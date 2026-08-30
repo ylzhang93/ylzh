@@ -106,15 +106,6 @@ h2.sec{
 h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 
 /* 关于 */
-.about{display:grid;grid-template-columns:auto 1fr;gap:2.6rem;align-items:start}
-.portrait{
-  width:118px;border-radius:5px;padding:6px;background:var(--paper-2);
-  border:1px solid var(--line);
-  filter:grayscale(45%) contrast(1.03);
-  transition:filter .6s ease;
-}
-.portrait:hover{filter:grayscale(0%) contrast(1)}
-.portrait img{display:block;width:100%;height:auto;border-radius:2px}
 .about p{margin-bottom:1.1rem}
 
 /* 研究兴趣 */
@@ -528,7 +519,6 @@ footer .copy{font-family:var(--sans);font-size:.7rem;letter-spacing:.18em}
 /* ---------- 响应式 ---------- */
 @media (max-width:760px){
   .about{grid-template-columns:1fr;gap:1.8rem}
-  .portrait{width:104px}
   .cards{grid-template-columns:1fr}
   section{padding:4rem 0 1rem}
   .page-head{padding-top:8rem}
