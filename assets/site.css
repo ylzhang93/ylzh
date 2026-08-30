@@ -352,6 +352,18 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
   background:transparent;cursor:pointer;transition:background .2s;
 }
 .symbol-panel button:hover{background:rgba(47,74,107,.15)}
+/* 数学字体与修饰面板（𝒜，WinEdt 式） */
+.fmt-panel{
+  display:grid;grid-template-columns:repeat(8,1fr);gap:.25rem;
+  padding:.7rem .8rem;background:var(--paper-2);
+  border:1px solid var(--line);border-top:none;border-radius:0 0 6px 6px;
+}
+.fmt-panel[hidden]{display:none}
+.fmt-panel button{
+  font-size:1.05rem;padding:.4rem .2rem;border:none;border-radius:5px;
+  background:transparent;cursor:pointer;transition:background .2s;
+}
+.fmt-panel button:hover{background:rgba(47,74,107,.15)}
 .editor-form input:focus,.editor-form textarea:focus,.editor-form select:focus{
   outline:none;border-color:var(--accent);
 }

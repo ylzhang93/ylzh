@@ -98,9 +98,11 @@
         <button type="button" data-cmd="env" data-tb="tb_env" title="多行环境">env</button>
         <button type="button" data-cmd="spoiler" data-tb="tb_spoiler" data-i18n="tb_spoiler_lbl" title="隐藏解答（点击展开）">隐藏</button>
         <span class="sep"></span>
+        <button type="button" data-cmd="mathfmt" data-tb="tb_mathfmt" title="数学字体与修饰">𝒜</button>
         <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
       </div>
       <div id="symbol-panel" class="symbol-panel" hidden></div>
+      <div id="fmt-panel" class="fmt-panel" hidden></div>
       <textarea id="f-body" spellcheck="false"></textarea>
     </div>
 
@@ -159,6 +161,26 @@
     '∫','∂','∇','√','π','θ','α','β','γ','δ','ε','λ','μ','σ','φ','ω','ℝ','ℂ','ℕ','ℤ','ℚ',
     '⊕','⊗','→','⇒','⇔','↦','·','∘','✓','✗','★','♥','☺',
     '😀','😄','😊','😉','🙂','😢','😮','🤔','👍','❤️','✨','🎉','📝','📚','🧮','⭐','🔥','✅','❌'
+  ];
+
+  /* 数学字体与修饰（WinEdt 式）：须在 openEditor 之前定义 */
+  var FMT = [
+    { lbl: '𝒜', tex: '\\mathcal{',  ph: '字母' },
+    { lbl: '𝔸', tex: '\\mathbb{',   ph: '字母' },
+    { lbl: '𝐀', tex: '\\mathbf{',   ph: '字母' },
+    { lbl: 'A', tex: '\\mathrm{',   ph: '字母' },
+    { lbl: '𝔄', tex: '\\mathfrak{', ph: '字母' },
+    { lbl: '𝒶', tex: '\\mathscr{',  ph: '字母' },
+    { lbl: 'x̄', tex: '\\overline{',  ph: 'x' },
+    { lbl: 'x̲', tex: '\\underline{', ph: 'x' },
+    { lbl: 'x̂', tex: '\\hat{',       ph: 'x' },
+    { lbl: 'x̃', tex: '\\tilde{',      ph: 'x' },
+    { lbl: '√x', tex: '\\sqrt{',     ph: 'x' },
+    { lbl: 'a⁄b', frac: true },
+    { lbl: '▢', tex: '\\boxed{',    ph: 'x' },
+    { lbl: 'x²', tex: '^{',          ph: '上标' },
+    { lbl: 'x₂', tex: '_{',          ph: '下标' },
+    { lbl: 'T', tex: '\\text{',     ph: '文本' }
   ];
 
   /* ---------- 语言切换 ---------- */
@@ -255,6 +277,28 @@
       box.appendChild(b);
     });
   }
+  /* 数学字体与修饰（WinEdt 式）：𝒜 面板 */
+  function buildFmtPanel(){
+    var box = $('fmt-panel');
+    FMT.forEach(function(f){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = f.lbl;
+      b.title = f.frac ? '\\frac{分子}{分母}' : f.tex + '…}';
+      b.addEventListener('click', function(){
+        if (f.frac) wrap('\\frac{', '}{分母}', '分子');
+        else wrap(f.tex, '}', f.ph);
+        closeFmt();
+      });
+      box.appendChild(b);
+    });
+  }
+  function closeFmt(){
+    var p = $('fmt-panel');
+    p.hidden = true;
+    var b = document.querySelector('[data-cmd="mathfmt"]');
+    if (b) b.setAttribute('aria-expanded', 'false');
+  }
   function closeSymbols(){
     var p = $('symbol-panel');
     p.hidden = true;
@@ -266,17 +310,27 @@
     if (!btn) return;
     var cmd = btn.getAttribute('data-cmd');
     if (cmd === 'symbols'){
-      var p = $('symbol-panel');
-      p.hidden = !p.hidden;
-      btn.setAttribute('aria-expanded', String(!p.hidden));
+      var sp = $('symbol-panel');
+      sp.hidden = !sp.hidden;
+      btn.setAttribute('aria-expanded', String(!sp.hidden));
+      closeFmt();
+      return;
+    }
+    if (cmd === 'mathfmt'){
+      var fp = $('fmt-panel');
+      fp.hidden = !fp.hidden;
+      btn.setAttribute('aria-expanded', String(!fp.hidden));
+      closeSymbols();
       return;
     }
     runCmd(cmd);
   });
   document.addEventListener('click', function(e){
     var inToolbar = e.target.closest && e.target.closest('#toolbar');
-    var inPanel = e.target.closest && e.target.closest('#symbol-panel');
-    if (!inToolbar && !inPanel) closeSymbols();
+    var inSymbols = e.target.closest && e.target.closest('#symbol-panel');
+    var inFmt = e.target.closest && e.target.closest('#fmt-panel');
+    if (!inToolbar && !inSymbols) closeSymbols();
+    if (!inToolbar && !inFmt) closeFmt();
   });
 
   function ta(){ return $('f-body'); }
@@ -558,6 +612,7 @@
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
     if (token) $('f-token').value = token;
     buildSymbolPanel();
+    buildFmtPanel();
     updateFilename();
     var sp = new URLSearchParams(location.search);
     if (sp.get('new') === '1'){
