@@ -69,6 +69,8 @@
   };
   /* :::theorem 标题 ... ::: 块 */
   var THM_RE = /^:::([a-zA-Z]+)[ \t]*([^\n]*)\n([\s\S]*?)^:::[ \t]*\n?/gm;
+  /* LaTeX 风格 \begin{theorem}[标题] ... \end{theorem}（只认定理类环境，不碰数学环境） */
+  var THM_LATEX_RE = /\\begin\{(theorem|lemma|proposition|corollary|definition|proof|remark|example|conjecture|claim)\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{\1\}/g;
 
   /* Markdown → 安全 HTML（公式已还原为 $…$ 文本，未做 KaTeX 排版） */
   function renderMarkdown(md, lang){
@@ -77,6 +79,15 @@
     function protectSeg(seg){
       /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
       seg = seg.replace(THM_RE, function(_, type, title, body){
+        var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
+        var t = (title || '').trim();
+        var head = '<div class="thm-head">' + label +
+          (t ? '<span class="thm-title">' + escapeHtml(t) + '</span>' : '') + '</div>';
+        return '<div class="thm thm-' + type + '">' + head + '\n\n' +
+          body.trim() + '\n\n</div>';
+      });
+      /* LaTeX 风格 \begin{theorem}[标题] ... \end{theorem} → 同样转成卡片 */
+      seg = seg.replace(THM_LATEX_RE, function(_, type, title, body){
         var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
         var t = (title || '').trim();
         var head = '<div class="thm-head">' + label +
