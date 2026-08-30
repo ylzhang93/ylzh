@@ -95,10 +95,8 @@
         <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
         <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
         <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
-        <span class="sep"></span>
-        <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
+        <button type="button" data-cmd="env" data-tb="tb_env" title="多行环境">env</button>
       </div>
-      <div id="symbol-panel" class="symbol-panel" hidden></div>
       <textarea id="f-body" spellcheck="false"></textarea>
     </div>
 
@@ -150,14 +148,6 @@
   var tags = [];
   var slugTouched = false;
   var token = '';
-
-  /* 符号面板内容（须在 openEditor 之前定义，var 提升只提升声明） */
-  var SYMBOLS = [
-    '∞','≠','≤','≥','±','×','÷','≈','∼','≡','∈','∉','⊂','⊆','∪','∩','∀','∃','∑','∏',
-    '∫','∂','∇','√','π','θ','α','β','γ','δ','ε','λ','μ','σ','φ','ω','ℝ','ℂ','ℕ','ℤ','ℚ',
-    '⊕','⊗','→','⇒','⇔','↦','·','∘','✓','✗','★','♥','☺',
-    '😀','😄','😊','😉','🙂','😢','😮','🤔','👍','❤️','✨','🎉','📝','📚','🧮','⭐','🔥','✅','❌'
-  ];
 
   /* ---------- 语言切换 ---------- */
   window.onLangChange = function(){
@@ -243,36 +233,10 @@
   }
 
   /* ---------- 工具栏：一键插入（AoPS 式） ---------- */
-  function buildSymbolPanel(){
-    var box = $('symbol-panel');
-    SYMBOLS.forEach(function(ch){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.textContent = ch;
-      b.addEventListener('click', function(){ insertAt(ch); closeSymbols(); });
-      box.appendChild(b);
-    });
-  }
-  function closeSymbols(){
-    $('symbol-panel').hidden = true;
-    document.querySelector('[data-cmd="symbols"]').setAttribute('aria-expanded', 'false');
-  }
   $('toolbar').addEventListener('click', function(e){
     var btn = e.target.closest ? e.target.closest('button[data-cmd]') : null;
     if (!btn) return;
-    var cmd = btn.getAttribute('data-cmd');
-    if (cmd === 'symbols'){
-      var p = $('symbol-panel');
-      p.hidden = !p.hidden;
-      btn.setAttribute('aria-expanded', String(!p.hidden));
-      return;
-    }
-    runCmd(cmd);
-  });
-  document.addEventListener('click', function(e){
-    var inToolbar = e.target.closest && e.target.closest('#toolbar');
-    var inPanel = e.target.closest && e.target.closest('#symbol-panel');
-    if (!inToolbar && !inPanel) closeSymbols();
+    runCmd(btn.getAttribute('data-cmd'));
   });
 
   function ta(){ return $('f-body'); }
@@ -327,6 +291,8 @@
       case 'math':     wrap('$', '$', 'x^2'); break;
       case 'mathblock':blockInsert('$$\n', '\n$$', '\\frac{a}{b}'); break;
       case 'aopsmath': wrap('[math]', '[/math]', 'x^2'); break;
+      case 'env':      blockInsert('$$\n\\begin{align*}\n', '\n\\end{align*}\n$$',
+                        'a &= b + c \\\\\n  &= d'); break;
     }
   }
 
@@ -549,7 +515,6 @@
   function init(){
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
     if (token) $('f-token').value = token;
-    buildSymbolPanel();
     updateFilename();
     var sp = new URLSearchParams(location.search);
     if (sp.get('new') === '1'){

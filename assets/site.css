@@ -324,18 +324,6 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
 }
 .toolbar button:hover{background:rgba(47,74,107,.12);color:var(--accent)}
 .toolbar .sep{width:1px;height:1.1rem;background:var(--line);margin:.15rem .3rem}
-/* 符号与表情面板 */
-.symbol-panel{
-  display:grid;grid-template-columns:repeat(10,1fr);gap:.25rem;
-  padding:.7rem .8rem;background:var(--paper-2);
-  border:1px solid var(--line);border-top:none;border-radius:0 0 6px 6px;
-  max-height:13rem;overflow-y:auto;
-}
-.symbol-panel button{
-  font-size:1.05rem;padding:.35rem .1rem;border:none;border-radius:5px;
-  background:transparent;cursor:pointer;transition:background .2s;
-}
-.symbol-panel button:hover{background:rgba(47,74,107,.15)}
 .editor-form input:focus,.editor-form textarea:focus,.editor-form select:focus{
   outline:none;border-color:var(--accent);
 }
