@@ -81,33 +81,25 @@
 
     <div class="frow">
       <label data-i18n="f_body">正文（Markdown + LaTeX）</label>
-      <div class="editor-split">
-        <div class="editor-source">
-          <div class="toolbar" id="toolbar" role="toolbar" aria-label="编辑工具">
-            <button type="button" data-cmd="bold" data-tb="tb_bold" title="加粗"><b>B</b></button>
-            <button type="button" data-cmd="italic" data-tb="tb_italic" title="斜体"><i>I</i></button>
-            <button type="button" data-cmd="heading" data-tb="tb_heading" title="标题">H</button>
-            <button type="button" data-cmd="list" data-tb="tb_list" title="列表">•</button>
-            <span class="sep"></span>
-            <button type="button" data-cmd="link" data-tb="tb_link" title="链接">🔗</button>
-            <button type="button" data-cmd="image" data-tb="tb_image" title="图片">🖼</button>
-            <button type="button" data-cmd="quote" data-tb="tb_quote" title="引用">❝</button>
-            <button type="button" data-cmd="code" data-tb="tb_code" title="代码块">&lt;/&gt;</button>
-            <span class="sep"></span>
-            <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
-            <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
-            <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
-            <span class="sep"></span>
-            <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
-          </div>
-          <div id="symbol-panel" class="symbol-panel" hidden></div>
-          <textarea id="f-body" spellcheck="false"></textarea>
-        </div>
-        <div class="editor-preview">
-          <div class="preview-head" data-i18n="btn_preview">预览</div>
-          <article id="preview-body" class="post"></article>
-        </div>
+      <div class="toolbar" id="toolbar" role="toolbar" aria-label="编辑工具">
+        <button type="button" data-cmd="bold" data-tb="tb_bold" title="加粗"><b>B</b></button>
+        <button type="button" data-cmd="italic" data-tb="tb_italic" title="斜体"><i>I</i></button>
+        <button type="button" data-cmd="heading" data-tb="tb_heading" title="标题">H</button>
+        <button type="button" data-cmd="list" data-tb="tb_list" title="列表">•</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="link" data-tb="tb_link" title="链接">🔗</button>
+        <button type="button" data-cmd="image" data-tb="tb_image" title="图片">🖼</button>
+        <button type="button" data-cmd="quote" data-tb="tb_quote" title="引用">❝</button>
+        <button type="button" data-cmd="code" data-tb="tb_code" title="代码块">&lt;/&gt;</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
+        <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
+        <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
       </div>
+      <div id="symbol-panel" class="symbol-panel" hidden></div>
+      <textarea id="f-body" spellcheck="false"></textarea>
     </div>
 
     <div class="frow">
@@ -118,6 +110,7 @@
     </div>
 
     <div class="actions">
+      <button id="btn-preview" class="btn btn-ghost" type="button" data-i18n="btn_preview">预览</button>
       <button id="btn-save" class="btn" type="button" data-i18n="btn_save">保存发布</button>
       <button id="btn-delete" class="btn btn-danger" type="button" data-i18n="btn_delete" hidden>删除文章</button>
     </div>
@@ -130,6 +123,17 @@
   <p class="motto">For life, for math, for entertainment.</p>
   <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
 </footer>
+
+<!-- 预览层：点「预览」按钮弹出 -->
+<div id="preview-modal" class="preview-modal" hidden>
+  <div class="preview-modal-bar">
+    <span data-i18n="btn_preview">预览</span>
+    <button id="preview-close" type="button" data-i18n-title="preview_close" title="关闭" aria-label="关闭">×</button>
+  </div>
+  <div class="preview-modal-body">
+    <article id="preview-body" class="post"></article>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -166,6 +170,8 @@
     document.querySelectorAll('[data-tb]').forEach(function(el){
       el.title = I18N.t(el.getAttribute('data-tb'));
     });
+    var pc = document.getElementById('preview-close');
+    if (pc) pc.title = I18N.t('preview_close');
   };
   window.onLangChange(I18N.lang);
 
@@ -270,7 +276,6 @@
   });
 
   function ta(){ return $('f-body'); }
-  function refreshPreview(){ ta().dispatchEvent(new Event('input', { bubbles: true })); }
 
   /* 环绕选区插入：**text**、$text$、[math]text[/math] */
   function wrap(before, after, ph){
@@ -279,7 +284,6 @@
     t.value = v.slice(0, s) + before + sel + after + v.slice(e);
     t.focus();
     t.setSelectionRange(s + before.length, s + before.length + sel.length);
-    refreshPreview();
   }
   /* 在光标处插入文本 */
   function insertAt(text, selFrom, selLen){
@@ -288,7 +292,6 @@
     t.focus();
     var p = s + (selFrom === undefined ? text.length : selFrom);
     t.setSelectionRange(p, p + (selLen || 0));
-    refreshPreview();
   }
   /* 当前行加前缀：## 标题、- 列表、> 引用 */
   function prefixLine(prefix, ph){
@@ -300,7 +303,6 @@
     t.value = v.slice(0, ls) + add + v.slice(ls);
     t.focus();
     t.setSelectionRange(ls + add.length, ls + add.length);
-    refreshPreview();
   }
   /* 块级插入：代码块 / 块级公式 */
   function blockInsert(before, after, ph){
@@ -310,7 +312,6 @@
     t.value = v.slice(0, s) + block + v.slice(e);
     t.focus();
     t.setSelectionRange(s + before.length + 1, s + before.length + 1 + sel.length);
-    refreshPreview();
   }
 
   function runCmd(cmd){
@@ -337,22 +338,34 @@
     }
   });
 
-  /* ---------- 正文实时预览（防抖，常驻右侧栏） ---------- */
-  var previewTimer = null;
-  $('f-body').addEventListener('input', function(){
-    clearTimeout(previewTimer);
-    previewTimer = setTimeout(renderPreview, 600);
-  });
-  function renderPreview(){
+  /* ---------- 预览（点「预览」按钮弹出预览层，不实时刷新） ---------- */
+  function openPreview(){
     var body = $('f-body').value;
     var pv = $('preview-body');
-    if (!body.trim()){ pv.innerHTML = ''; return; }
+    if (!body.trim()){ showMsg(I18N.t('need_body'), 'err'); return; }
     window.LIBS.load(function(ok){
       if (!ok){ showMsg(I18N.t('load_fail'), 'err'); return; }
       pv.innerHTML = window.LIBS.renderMarkdown(body);
       window.LIBS.renderMathIn(pv);
+      var modal = $('preview-modal');
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';   /* 锁定背景滚动 */
     });
   }
+  function closePreview(){
+    var modal = $('preview-modal');
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    document.body.style.overflow = '';
+  }
+  $('btn-preview').addEventListener('click', openPreview);
+  $('preview-close').addEventListener('click', closePreview);
+  $('preview-modal').addEventListener('click', function(e){
+    if (e.target === this) closePreview();   /* 点空白处关闭 */
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closePreview();
+  });
 
   /* ---------- 已有文章列表 ---------- */
   var allPosts = [];
@@ -392,6 +405,7 @@
     tags = [];
     renderChips();
     $('btn-delete').hidden = true;
+    closePreview();
     $('preview-body').innerHTML = '';
     updateFilename();
   }
@@ -416,7 +430,6 @@
       $('f-body').value = md;
       $('btn-delete').hidden = false;
       updateFilename();
-      renderPreview();
       window.scrollTo(0, 0);
     });
   });

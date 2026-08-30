@@ -98,7 +98,8 @@
       row_edit: '编辑',
       row_delete: '删除',
       badge_latest: '最新',
-      post_count: '共 {n} 篇文章'
+      post_count: '共 {n} 篇文章',
+      preview_close: '关闭预览'
     },
 
     en: {
@@ -187,7 +188,8 @@
       row_edit: 'Edit',
       row_delete: 'Delete',
       badge_latest: 'Latest',
-      post_count: '{n} posts'
+      post_count: '{n} posts',
+      preview_close: 'Close preview'
     }
   };
 
