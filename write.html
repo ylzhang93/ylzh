@@ -35,7 +35,14 @@
 <main class="write-wrap">
   <h1 class="sec" data-i18n="write_title" style="margin-top:6.5rem">写作</h1>
 
-  <!-- 口令门禁（仅站长） -->
+  <!-- 访客视角：404（没有令牌时显示） -->
+  <div id="notfound" class="nf" hidden>
+    <p class="nf-code">404</p>
+    <p class="nf-text" data-i18n="notfound_text">页面不存在。</p>
+    <a id="owner-entry" class="nf-link" href="#" data-i18n="owner_link">站长入口</a>
+  </div>
+
+  <!-- 口令门禁（仅站长，可选项） -->
   <div id="gate" class="gate" hidden>
     <p data-i18n="gate_prompt">此页面仅限站长使用，请输入口令。</p>
     <div class="row">
@@ -204,27 +211,43 @@
   };
   window.onLangChange(I18N.lang);
 
-  /* ---------- 门禁 ---------- */
+  /* ---------- 门禁：无令牌显示 404，站长入口可进入 ---------- */
   function openEditor(){
     gate.hidden = true;
+    $('notfound').hidden = true;
     editor.hidden = false;
     if (!cfg.owner || !cfg.repo){
       showMsg(I18N.t('cfg_missing'), 'err');
     }
     init();
   }
-  if (cfg.editorKey && localStorage.getItem(UNLOCK_KEY) !== '1'){
-    gate.hidden = false;
-    $('gate-btn').addEventListener('click', function(){
-      if ($('gate-input').value === cfg.editorKey){
-        try { localStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
-        openEditor();
-      } else {
-        $('gate-err').hidden = false;
-      }
-    });
+  function showNotFound(){
+    $('notfound').hidden = false;
+    gate.hidden = true;
+    editor.hidden = true;
+  }
+  $('gate-btn').addEventListener('click', function(){
+    if ($('gate-input').value === cfg.editorKey){
+      try { localStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
+      openEditor();
+    } else {
+      $('gate-err').hidden = false;
+    }
+  });
+  $('owner-entry').addEventListener('click', function(e){
+    e.preventDefault();
+    if (cfg.editorKey && localStorage.getItem(UNLOCK_KEY) !== '1'){
+      gate.hidden = false;          /* 口令门禁（可选项） */
+    } else {
+      openEditor();
+    }
+  });
+  var savedToken = '';
+  try { savedToken = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
+  if (savedToken){
+    openEditor();                   /* 站长：直接进编辑器 */
   } else {
-    openEditor();
+    showNotFound();                 /* 访客：页面不存在（404） */
   }
 
   /* ---------- 消息 ---------- */

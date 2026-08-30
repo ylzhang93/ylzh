@@ -48,6 +48,8 @@
 
       write_link: '写作',
       write_title: '写作',
+      notfound_text: '页面不存在。',
+      owner_link: '站长入口',
       gate_prompt: '此页面仅限站长使用，请输入口令。',
       gate_ph: '口令',
       gate_unlock: '解锁',
@@ -145,6 +147,8 @@
 
       write_link: 'Write',
       write_title: 'Write',
+      notfound_text: 'Page not found.',
+      owner_link: 'Owner entry',
       gate_prompt: 'This page is for the site owner only. Enter the passphrase.',
       gate_ph: 'Passphrase',
       gate_unlock: 'Unlock',

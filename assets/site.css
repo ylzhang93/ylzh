@@ -439,6 +439,20 @@ article.post .thm-claim .thm-head::after{content:" " counter(claim)}
   color:var(--ink-soft);margin-bottom:1.4rem;
 }
 
+/* ---------- 写作页：404 幕帘 ---------- */
+.nf{padding:3rem 0 6rem;text-align:center}
+.nf-code{
+  font-size:clamp(4.5rem,14vw,7.5rem);font-weight:500;line-height:1;
+  color:var(--ink-soft);
+}
+.nf-text{margin-top:1.1rem;color:var(--ink-soft);font-style:italic}
+.nf-link{
+  display:inline-block;margin-top:2.8rem;font-family:var(--sans);
+  font-size:.66rem;letter-spacing:.24em;color:rgba(98,94,83,.45);
+  text-decoration:none;transition:color .3s;
+}
+.nf-link:hover{color:var(--ink-soft)}
+
 /* ---------- 写作页：预览层（点「预览」按钮弹出） ---------- */
 .preview-modal{
   position:fixed;inset:0;z-index:100;
