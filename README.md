@@ -205,7 +205,7 @@ git init
 git add .
 git commit -m "initial commit: personal page"
 git branch -M main
-git remote add origin https://github.com/<用户名>/<仓库名>.git
+git remote add origin git@github.com:ylzhang93/ylzh.git
 git push -u origin main
 ```
 
@@ -221,7 +221,6 @@ git push -u origin main
 
 - 名字：首屏 `<h1 class="name">`（`zyl` 和中文名）
 - 邮箱：联系区 `mailto:` 链接
-- GitHub 链接：创建账号后把地址换成你的用户名
 - 公式：KaTeX 语法，行内 `\(...\)`、块级 `\[...\]`
 
 ## 目录结构
