@@ -96,6 +96,7 @@
         <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
         <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
         <button type="button" data-cmd="env" data-tb="tb_env" title="多行环境">env</button>
+        <button type="button" data-cmd="spoiler" data-tb="tb_spoiler" data-i18n="tb_spoiler_lbl" title="隐藏解答（点击展开）">隐藏</button>
         <span class="sep"></span>
         <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
       </div>
@@ -332,6 +333,8 @@
       case 'aopsmath': wrap('[math]', '[/math]', 'x^2'); break;
       case 'env':      blockInsert('$$\n\\begin{align*}\n', '\n\\end{align*}\n$$',
                         'a &= b + c \\\\\n  &= d'); break;
+      case 'spoiler':  blockInsert('<details>\n<summary>' + I18N.t('spoiler_summary') +
+                        '</summary>\n\n', '\n\n</details>', I18N.t('spoiler_ph')); break;
     }
   }
 
