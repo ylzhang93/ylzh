@@ -415,6 +415,12 @@ article.post .thm-claim .thm-head::after{content:" " counter(claim)}
   border-bottom:1px solid rgba(47,74,107,.35);
 }
 .token-link:hover{border-bottom-color:var(--accent)}
+.remember{
+  display:flex;align-items:center;gap:.5rem;margin-top:.65rem;
+  font-family:var(--sans);font-size:.8rem;letter-spacing:0;text-transform:none;
+  color:var(--ink);cursor:pointer;
+}
+.remember input{width:auto;accent-color:var(--accent)}
 
 .actions{display:flex;gap:.8rem;flex-wrap:wrap;margin:1.6rem 0 1rem}
 .btn{

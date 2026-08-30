@@ -118,6 +118,11 @@
     <div class="frow">
       <label data-i18n="token_lbl">GitHub Token</label>
       <input id="f-token" type="password" autocomplete="off">
+      <label class="remember">
+        <input id="f-remember" type="checkbox">
+        <span data-i18n="remember_lbl">在这台电脑上记住令牌</span>
+      </label>
+      <p class="filename-hint" data-i18n="remember_hint">别人的电脑请勿勾选——令牌只本次使用，关闭浏览器即消失。</p>
       <p class="filename-hint" data-i18n="token_help">需要仓库 contents 读写权限</p>
       <p class="filename-hint"><a id="token-link" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" data-i18n="token_link">创建令牌 →</a></p>
     </div>
@@ -591,7 +596,10 @@
     var body = $('f-body').value;
     if (!title){ showMsg(I18N.t('need_title'), 'err'); return; }
     if (!body.trim()){ showMsg(I18N.t('need_body'), 'err'); return; }
-    try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+    /* 勾选「记住」才存 localStorage；别人的电脑不勾 → 令牌只本次使用 */
+    if ($('f-remember').checked){
+      try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+    }
 
     var date = editing ? editing.date : today();
     var slug = $('f-slug').value.trim() || window.Search.slugify(title) || 'post';
@@ -681,7 +689,10 @@
   /* ---------- 初始化 ---------- */
   function init(){
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
-    if (token) $('f-token').value = token;
+    if (token){
+      $('f-token').value = token;
+      $('f-remember').checked = true;   /* 已有记忆令牌 → 开关保持勾选 */
+    }
     buildSymbolPanel();
     buildFmtPanel();
     buildThmPanel();
