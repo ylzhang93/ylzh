@@ -271,7 +271,7 @@
     loading = true;
     searching.hidden = false;
     Promise.all(need.map(function(p){
-      return fetch(p.file).then(function(r){ return r.ok ? r.text() : ''; })
+      return fetch(p.file, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.text() : ''; })
         .then(function(t){ mdCache[p.file] = t; })
         .catch(function(){ mdCache[p.file] = ''; });
     })).then(function(){
@@ -337,7 +337,7 @@
   /* ---------- 加载清单 ---------- */
   readParams();
   searchInput.value = state.q;
-  fetch('posts/index.json')
+  fetch('posts/index.json', { cache: 'no-cache' })
     .then(function(r){ return r.ok ? r.json() : []; })
     .catch(function(){ return []; })
     .then(function(data){

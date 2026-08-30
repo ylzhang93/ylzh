@@ -132,10 +132,10 @@
 
     function loadAndRender(){
       Promise.all([
-        fetch('posts/index.json')
+        fetch('posts/index.json', { cache: 'no-cache' })
           .then(function(r){ return r.ok ? r.json() : []; })
           .catch(function(){ return []; }),
-        fetch(file).then(function(r){
+        fetch(file, { cache: 'no-cache' }).then(function(r){
           if (!r.ok) throw new Error('not found');
           return r.text();
         })
