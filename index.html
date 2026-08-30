@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>zyl · Mathematics</title>
+<meta name="description" content="zyl — PhD student in mathematics. Algebraic geometry, moduli spaces, number theory. 数学博士生个人主页。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f7f5f0'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='42' text-anchor='middle' fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+
+<style>
+  :root{
+    --paper:   #f7f5f0;   /* 暖米色纸 */
+    --paper-2: #efede5;   /* 略深的纸 */
+    --ink:     #23211c;   /* 暖墨色 */
+    --ink-soft:#625e53;   /* 浅墨 */
+    --accent:  #2f4a6b;   /* 学术蓝 */
+    --line:    rgba(35,33,28,.16);
+    --serif: "EB Garamond", Georgia, "Songti SC", "Noto Serif SC", "Source Han Serif SC", "SimSun", serif;
+    --sans: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;scroll-padding-top:5.5rem}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:var(--serif);line-height:1.9;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  ::selection{background:var(--accent);color:var(--paper)}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+
+  /* ---------- 纸张颗粒纹理 ---------- */
+  .grain{
+    position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.045;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- 导航 ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:1.15rem clamp(1.2rem,5vw,3rem);
+    background:color-mix(in srgb, var(--paper) 80%, transparent);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;transition:border-color .35s;
+  }
+  nav.scrolled{border-bottom-color:var(--line)}
+  .brand{font-size:1.3rem;letter-spacing:.03em;color:var(--ink);text-decoration:none;font-weight:500}
+  .nav-links{display:flex;align-items:baseline;gap:clamp(1rem,3vw,2rem)}
+  .nav-links a{
+    color:var(--ink-soft);text-decoration:none;font-family:var(--sans);
+    font-size:.78rem;letter-spacing:.16em;position:relative;padding-bottom:4px;
+    transition:color .3s;
+  }
+  .nav-links a .en{margin-left:.35em;opacity:.65}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-links a.active{color:var(--ink)}
+  .nav-links a.active::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);
+  }
+
+  /* ---------- 首屏 ---------- */
+  header{
+    position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    text-align:center;overflow:hidden;padding:6rem 1.5rem 4rem;
+  }
+  #knot{
+    position:absolute;inset:0;width:100%;height:100%;opacity:.5;
+    -webkit-mask-image:radial-gradient(ellipse 72% 72% at 50% 44%, #000 25%, transparent 74%);
+            mask-image:radial-gradient(ellipse 72% 72% at 50% 44%, #000 25%, transparent 74%);
+  }
+  .hero-inner{position:relative;max-width:52rem;margin:0 auto}
+  .overline{
+    font-family:var(--sans);font-size:.78rem;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:1.6rem;
+  }
+  h1.name{font-size:clamp(3.2rem,10vw,5.6rem);font-weight:500;line-height:1.04;letter-spacing:.02em}
+  h1.name .cn{
+    display:block;font-size:.36em;font-weight:400;color:var(--ink-soft);
+    letter-spacing:.42em;margin-top:1.1rem;text-indent:.42em;
+  }
+  .formula-hero{
+    margin:3rem auto 0;color:var(--accent);
+    font-size:clamp(1.25rem,3.4vw,1.7rem);
+  }
+  .hint{
+    position:absolute;bottom:2.2rem;left:50%;transform:translateX(-50%);
+    font-family:var(--sans);font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-soft);
+    animation:hint 2.6s ease-in-out infinite;
+  }
+  @keyframes hint{
+    0%,100%{transform:translate(-50%,0);opacity:.85}
+    50%    {transform:translate(-50%,7px);opacity:.35}
+  }
+
+  /* ---------- 主体 ---------- */
+  main{max-width:46rem;margin:0 auto;padding:0 1.5rem}
+  section{padding:5.5rem 0 1rem}
+  h2.sec{
+    font-family:var(--sans);font-size:.9rem;font-weight:500;letter-spacing:.24em;
+    color:var(--ink-soft);display:flex;align-items:center;gap:1.1rem;margin-bottom:2.4rem;
+  }
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* 关于 */
+  .about{display:grid;grid-template-columns:auto 1fr;gap:2.6rem;align-items:start}
+  .portrait{
+    width:118px;border-radius:5px;padding:6px;background:var(--paper-2);
+    border:1px solid var(--line);
+    filter:grayscale(45%) contrast(1.03);
+    transition:filter .6s ease;
+  }
+  .portrait:hover{filter:grayscale(0%) contrast(1)}
+  .portrait img{display:block;width:100%;height:auto;border-radius:2px}
+  .about p{margin-bottom:1.1rem}
+  .about p.en{color:var(--ink-soft);font-size:.95rem;font-style:italic}
+
+  /* 研究兴趣 */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+  .card{
+    background:var(--paper-2);border:1px solid var(--line);border-radius:8px;
+    padding:1.7rem 1.5rem;
+    transition:transform .45s cubic-bezier(.2,.7,.2,1), box-shadow .45s;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 32px -20px rgba(35,33,28,.45)}
+  .card h3{font-size:1.12rem;font-weight:500}
+  .card h3 .en{
+    display:block;font-family:var(--sans);font-size:.64rem;font-weight:500;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);margin-top:.4rem;
+  }
+  .card .formula{
+    margin-top:1.1rem;padding-top:.95rem;border-top:1px dashed var(--line);
+    color:var(--accent);font-size:.95rem;overflow-x:auto;
+  }
+  .card p{font-size:.92rem;color:var(--ink-soft);margin-top:.7rem;line-height:1.75}
+
+  /* 联系 */
+  .contact-links{display:flex;flex-direction:column;gap:1rem}
+  .contact-links a{
+    display:inline-flex;align-items:baseline;gap:.9rem;width:fit-content;
+    color:var(--ink);text-decoration:none;font-size:1.06rem;
+    background-image:linear-gradient(var(--accent),var(--accent));
+    background-size:0% 1px;background-repeat:no-repeat;background-position:left 100%;
+    transition:background-size .5s cubic-bezier(.2,.7,.2,1), color .3s;
+    padding-bottom:2px;
+  }
+  .contact-links a:hover{color:var(--accent);background-size:100% 1px}
+  .contact-links .lbl{
+    font-family:var(--sans);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink-soft);min-width:5.5em;
+  }
+  .contact-note{margin-top:2.2rem;color:var(--ink-soft);font-style:italic;font-size:.98rem}
+
+  /* 页脚 */
+  footer{
+    margin-top:5.5rem;padding:2.6rem 1.5rem 3.2rem;text-align:center;
+    border-top:1px solid var(--line);color:var(--ink-soft);font-size:.92rem;
+  }
+  footer .motto{font-style:italic;letter-spacing:.06em;margin-bottom:.6rem}
+  footer .copy{font-family:var(--sans);font-size:.7rem;letter-spacing:.18em}
+
+  /* 滚动渐显 */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .cards .card:nth-child(2){transition-delay:.1s}
+  .cards .card:nth-child(3){transition-delay:.2s}
+
+  /* 响应式 */
+  @media (max-width:760px){
+    .about{grid-template-columns:1fr;gap:1.8rem}
+    .portrait{width:104px}
+    .cards{grid-template-columns:1fr}
+    .nav-links a .en{display:none}
+    section{padding:4rem 0 1rem}
+  }
+
+  /* 减少动态效果 */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    .reveal{opacity:1;transform:none;transition:none}
+    .hint{animation:none}
+  }
+</style>
+</head>
+
+<body>
+
+<nav id="nav" aria-label="主导航">
+  <a class="brand" href="#top">zyl</a>
+  <div class="nav-links">
+    <a href="#about">关于<span class="en">About</span></a>
+    <a href="#research">研究<span class="en">Research</span></a>
+    <a href="#contact">联系<span class="en">Contact</span></a>
+  </div>
+</nav>
+
+<header id="top">
+  <canvas id="knot" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="overline">数学博士研究生 · PhD Student in Mathematics</p>
+    <!-- TODO: 把 zyl 替换为你的名字（中文名放在 <span class="cn"> 里） -->
+    <h1 class="name">zyl<span class="cn">张·Z</span></h1>
+    <div class="formula-hero">\[ e^{i\pi} + 1 = 0 \]</div>
+  </div>
+  <div class="hint" aria-hidden="true">scroll</div>
+</header>
+
+<main>
+  <section id="about">
+    <h2 class="sec reveal">关于 · About</h2>
+    <div class="about">
+      <figure class="portrait reveal">
+        <img src="source/img/wuzhu.jpg" alt="portrait 照片">
+      </figure>
+      <div class="reveal">
+        <p>我是 zyl，一名数学博士生，对代数几何、模空间与数论怀有持久的兴趣。这个页面是一个安静的地方——安放我对数学的一些想法与记录。</p>
+        <p class="en">I am a PhD student in mathematics, with a lasting interest in algebraic geometry, moduli spaces and number theory. This page is a quiet corner for my mathematical thoughts and notes.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="research">
+    <h2 class="sec reveal">研究兴趣 · Research</h2>
+    <div class="cards">
+      <div class="card reveal">
+        <h3>代数几何<span class="en">Algebraic Geometry</span></h3>
+        <div class="formula">\[ \chi(\mathcal{O}_X) = \sum_{i \ge 0} (-1)^i \dim H^i(X,\mathcal{O}_X) \]</div>
+        <p>层的上同调、光滑与奇点。<span class="en" style="font-style:italic;opacity:.8"> Sheaf cohomology, smoothness and singularities.</span></p>
+      </div>
+      <div class="card reveal">
+        <h3>模空间<span class="en">Moduli Spaces</span></h3>
+        <div class="formula">\[ \dim \mathcal{M}_g = 3g - 3 \]</div>
+        <p>曲线的模空间、GIT 与紧化。<span class="en" style="font-style:italic;opacity:.8"> Moduli of curves, GIT and compactification.</span></p>
+      </div>
+      <div class="card reveal">
+        <h3>数论<span class="en">Number Theory</span></h3>
+        <div class="formula">\[ \zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s} \]</div>
+        <p>算术对象中的对称与秩序。<span class="en" style="font-style:italic;opacity:.8"> Symmetry and order in arithmetic objects.</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2 class="sec reveal">联系 · Contact</h2>
+    <div class="contact-links">
+      <!-- TODO: 修改为你的邮箱 -->
+      <a class="reveal" href="mailto:496543081@qq.com"><span class="lbl">Email</span>496543081@qq.com</a>
+      <!-- TODO: 创建 GitHub 账号后，把地址改为 https://github.com/你的用户名 -->
+      <a class="reveal" href="https://github.com/" target="_blank" rel="noopener"><span class="lbl">GitHub</span>github.com/你的用户名</a>
+    </div>
+    <p class="contact-note reveal">欢迎来信交流数学。Always happy to talk math.</p>
+  </section>
+</main>
+
+<footer>
+  <p class="motto">For life, for math, for entertainment.</p>
+  <p class="copy">© <span id="year">2025</span> zyl · Made with paper &amp; ink</p>
+</footer>
+
+<div class="grain" aria-hidden="true"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- 年份 ---------- */
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ---------- 导航滚动状态与当前位置 ---------- */
+  var nav = document.getElementById('nav');
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+  var secs = Array.prototype.slice.call(document.querySelectorAll('header[id], section[id]'));
+  function onScroll(){
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+    var cur = 'top', off = 140;
+    secs.forEach(function(s){
+      if (s.getBoundingClientRect().top <= off) cur = s.id;
+    });
+    links.forEach(function(l){
+      l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  /* ---------- 滚动渐显 ---------- */
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, {threshold: 0.15});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* ---------- 三叶扭结（trefoil knot）动画 ---------- */
+  var cvs = document.getElementById('knot');
+  var ctx = cvs.getContext('2d');
+  var W = 0, H = 0;
+
+  function resize(){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var r = cvs.parentElement.getBoundingClientRect();
+    W = r.width; H = r.height;
+    cvs.width = Math.round(W * dpr);
+    cvs.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var N = 460;
+  function knot(u){
+    var p = 2, q = 3;
+    var c = Math.cos(q * u), s = Math.sin(q * u);
+    return [(2 + c) * Math.cos(p * u), (2 + c) * Math.sin(p * u), s];
+  }
+  function rotY(v, a){
+    var c = Math.cos(a), s = Math.sin(a);
+    return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c];
+  }
+  function rotX(v, a){
+    var c = Math.cos(a), s = Math.sin(a);
+    return [v[0], v[1] * c - v[2] * s, v[1] * s + v[2] * c];
+  }
+  function trace(pts){
+    ctx.beginPath();
+    for (var i = 0; i <= N; i++){
+      i === 0 ? ctx.moveTo(pts[i][0], pts[i][1]) : ctx.lineTo(pts[i][0], pts[i][1]);
+    }
+  }
+  function drawFrame(t){
+    ctx.clearRect(0, 0, W, H);
+    if (W < 2) return;
+    var ay = t * 0.4, ax = Math.sin(t * 0.17) * 0.5;
+    var scale = Math.min(W, H) / 5.4, cx = W / 2, cy = H * 0.46;
+    var pts = [];
+    for (var i = 0; i <= N; i++){
+      var v = rotX(rotY(knot(i / N * Math.PI * 2), ay), ax);
+      var f = 5 / (5 - v[2] * 1.1);
+      pts.push([cx + v[0] * scale * f, cy + v[1] * scale * f]);
+    }
+    trace(pts);
+    ctx.strokeStyle = 'rgba(47,74,107,0.10)';
+    ctx.lineWidth = 3.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+    trace(pts);
+    ctx.strokeStyle = 'rgba(35,33,28,0.36)';
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+  }
+
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced){
+    drawFrame(0.55);          /* 只画一帧静态图 */
+  } else {
+    var t = 0;
+    (function loop(){
+      drawFrame(t);
+      t += 0.012;
+      requestAnimationFrame(loop);
+    })();
+  }
+})();
+</script>
+</body>
+</html>
