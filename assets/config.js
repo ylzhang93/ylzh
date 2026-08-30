@@ -4,7 +4,7 @@
 window.SITE_CONFIG = {
   /* GitHub 用户名 */
   owner: '',
-  /* TODO: 仓库名（发布到 GitHub Pages 的那个仓库，如 ylzhang93.github.io 或 azhangbiu） */
+  /* 仓库名（发布到 GitHub Pages 的那个仓库） */
   repo: '',
   /* 默认分支 */
   branch: 'main',
