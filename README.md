@@ -4,11 +4,22 @@
 
 数学博士生的个人主页。单页静态站点：纯 HTML / CSS / JavaScript，无构建步骤。
 
-- 米色纸张质感 + 衬线排版（EB Garamond），中英双语
+- 米色纸张质感 + 衬线排版（EB Garamond）
+- **中 / EN 语言切换**：右上角开关一键切换全站语言（自动记住选择）
 - KaTeX 渲染数学公式
 - Canvas 绘制缓慢旋转的三叶扭结（trefoil knot）动画
 - 滚动渐显、导航高亮、响应式，兼容 `prefers-reduced-motion`
 - 数学博客：Markdown 写作，`$...$` 渲染公式，像写 LaTeX 一样简单
+
+## 语言切换
+
+页面右上角有一个语言开关（中文模式显示 `EN`，英文模式显示 `中文`），点击即可切换全站语言：
+
+- 界面文字（导航、标题、介绍、联系等）全部随语言切换
+- 选择会保存在浏览器里（localStorage），下次访问自动恢复
+- 首次访问自动跟随浏览器语言（`zh*` 用中文，否则英文）
+- 每篇文章可提供中英两个标题：`posts/index.json` 里的 `title_zh` / `title_en`（缺省回退到 `title`）
+- 文章正文的语言由你自己决定（写中文或英文都可以）；想要双语文章，可以写两篇，或用 `--title-en` 只提供英文标题
 
 ## 本地预览
 
@@ -23,11 +34,12 @@ python -m http.server 8080
 
 ```bash
 python new_post.py "文章标题" --tags "代数几何, 笔记"
+python new_post.py "My Title" --title-en "My Title" --tags "数论"   # 同时提供英文标题
 ```
 
 脚本会：
 1. 在 `posts/` 下创建 `2026-08-30-文章标题.md` 模板文件
-2. 把文章信息写入 `posts/index.json`（文章列表）
+2. 把文章信息写入 `posts/index.json`（文章列表；`--title-en` 可加英文标题）
 
 然后编辑这个 `.md` 文件，写完推送到 GitHub 即上线：
 
@@ -62,8 +74,10 @@ git push
 在 `posts/` 下新建 `2026-08-30-my-title.md`，再往 `posts/index.json` 里加一条：
 
 ```json
-{"file": "posts/2026-08-30-my-title.md", "title": "我的标题", "date": "2026-08-30", "tags": ["数论"]}
+{"file": "posts/2026-08-30-my-title.md", "title": "我的标题", "title_en": "My Title", "date": "2026-08-30", "tags": ["数论"]}
 ```
+
+`title_en` 可省略；省略时英文界面沿用 `title`。
 
 `posts/2026-08-30-euler-identity.md` 是一篇示例文章（演示各种语法），确认后可以删除。
 

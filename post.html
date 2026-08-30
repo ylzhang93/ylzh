@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>文章 — zyl</title>
+<title>文章 · zyl</title>
 <meta name="description" content="zyl 的数学博客文章。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
 
@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/i18n.js"></script>
 </head>
 
 <body>
@@ -19,24 +20,25 @@
 <nav aria-label="主导航">
   <a class="brand" href="index.html">zyl</a>
   <div class="nav-links">
-    <a href="index.html#about">关于<span class="en">About</span></a>
-    <a href="index.html#research">研究<span class="en">Research</span></a>
-    <a href="blog.html" class="active">博客<span class="en">Blog</span></a>
-    <a href="index.html#contact">联系<span class="en">Contact</span></a>
+    <a href="index.html#about" data-i18n="nav_about">关于</a>
+    <a href="index.html#research" data-i18n="nav_research">研究</a>
+    <a href="blog.html" class="active" data-i18n="nav_blog">博客</a>
+    <a href="index.html#contact" data-i18n="nav_contact">联系</a>
+    <button class="lang-btn" data-i18n-toggle type="button" aria-label="切换语言">EN</button>
   </div>
 </nav>
 
 <main class="post-wrap">
-  <a class="back" href="blog.html">← 返回博客 · Back to Blog</a>
+  <a class="back" href="blog.html" data-i18n="back_blog">← 返回博客</a>
   <article id="post" class="post">
-    <p class="empty">正在加载… Loading…</p>
+    <p class="empty" data-i18n="loading">正在加载…</p>
   </article>
   <nav id="post-nav" class="post-nav" aria-label="上一篇下一篇"></nav>
 </main>
 
 <footer>
   <p class="motto">For life, for math, for entertainment.</p>
-  <p class="copy">© <span id="year">2026</span> zyl · Made with paper &amp; ink</p>
+  <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
 </footer>
 
 <script>
@@ -89,7 +91,7 @@
 
   function fail(){
     document.getElementById('post').innerHTML =
-      '<p class="empty">博客组件加载失败，请检查网络后重试。<br>Failed to load. Check your connection.</p>';
+      '<p class="empty">' + I18N.t('load_fail') + '</p>';
   }
 
   function escapeHtml(s){
@@ -98,13 +100,45 @@
     });
   }
 
+  var state = { posts: [], file: null, entry: null };
+
+  /* 标题按语言取：title_zh / title_en，缺省回退到 title */
+  function titleFor(p){
+    return (I18N.lang === 'zh' ? p.title_zh : p.title_en) || p.title || '';
+  }
+
+  /* 语言切换时更新：页面标题 + 上一篇/下一篇 */
+  window.onLangChange = function(){
+    if (!state.file) return;
+    var entry = state.entry;
+    var title = entry ? titleFor(entry)
+                      : ((state.md || '').match(/^#\s+(.+)$/m) || ['', I18N.t('no_post')])[1].trim();
+    document.title = title + ' · zyl';
+
+    var navEl = document.getElementById('post-nav');
+    var idx = state.posts.indexOf(entry);
+    if (idx > -1){
+      var next = state.posts[idx - 1];   /* 更新的 */
+      var prev = state.posts[idx + 1];   /* 更旧的 */
+      var left = prev
+        ? '<a href="post.html?p=' + encodeURIComponent(prev.file) + '">' +
+            '<span class="dir">← ' + I18N.t('prev_dir') + '</span>' + escapeHtml(titleFor(prev)) + '</a>'
+        : '<span></span>';
+      var right = next
+        ? '<a class="next" href="post.html?p=' + encodeURIComponent(next.file) + '">' +
+            '<span class="dir">' + I18N.t('next_dir') + ' →</span>' + escapeHtml(titleFor(next)) + '</a>'
+        : '<span></span>';
+      navEl.innerHTML = left + right;
+    }
+  };
+
   function renderPost(){
     var params = new URLSearchParams(location.search);
     var file = params.get('p');
     var article = document.getElementById('post');
 
     if (!file){
-      article.innerHTML = '<p class="empty">未指定文章。Missing article.</p>';
+      article.innerHTML = '<p class="empty">' + I18N.t('no_post') + '</p>';
       return;
     }
 
@@ -119,10 +153,12 @@
         return r.text();
       })
     ]).then(function(res){
-      var posts = Array.isArray(res[0]) ? res[0] : [];
+      state.posts = Array.isArray(res[0]) ? res[0] : [];
+      state.file = file;
+      state.md = res[1];
+      state.entry = null;
+      state.posts.forEach(function(x){ if (x && x.file === file) state.entry = x; });
       var md = res[1];
-      var entry = null;
-      posts.forEach(function(x){ if (x && x.file === file) entry = x; });
 
       /* 数学保护：围栏代码块原样保留，其余部分先转换 [math] 标签，
          再把数学片段换成占位符，避免 Markdown 引擎误解析公式里的 _ * 等字符 */
@@ -156,11 +192,9 @@
       });
       var clean = window.DOMPurify.sanitize(html);
 
-      var title = entry ? entry.title : ((md.match(/^#\s+(.+)$/m) || [,'无题'])[1]).trim();
-      var date  = entry ? entry.date : ((file.match(/^posts\/(\d{4}-\d{2}-\d{2})/) || [,''])[1]);
-      var tags  = entry && Array.isArray(entry.tags) ? entry.tags : [];
-
-      document.title = title + ' · zyl';
+      var title = state.entry ? titleFor(state.entry) : ((md.match(/^#\s+(.+)$/m) || [,''])[1] || '').trim();
+      var date  = state.entry ? state.entry.date : ((file.match(/^posts\/(\d{4}-\d{2}-\d{2})/) || [,''])[1]);
+      var tags  = state.entry && Array.isArray(state.entry.tags) ? state.entry.tags : [];
 
       var meta = '<header class="post-meta"><span>' + escapeHtml(date) + '</span>' +
         tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('') +
@@ -168,22 +202,7 @@
 
       article.innerHTML = '<h1>' + escapeHtml(title) + '</h1>' + meta + clean;
 
-      /* 上一篇 / 下一篇（清单按日期倒序） */
-      var idx = posts.indexOf(entry);
-      var navEl = document.getElementById('post-nav');
-      if (idx > -1){
-        var next = posts[idx - 1];   /* 更新的 */
-        var prev = posts[idx + 1];   /* 更旧的 */
-        var left = prev
-          ? '<a href="post.html?p=' + encodeURIComponent(prev.file) + '">' +
-              '<span class="dir">← 上一篇 Prev</span>' + escapeHtml(prev.title) + '</a>'
-          : '<span></span>';
-        var right = next
-          ? '<a class="next" href="post.html?p=' + encodeURIComponent(next.file) + '">' +
-              '<span class="dir">下一篇 Next →</span>' + escapeHtml(next.title) + '</a>'
-          : '<span></span>';
-        navEl.innerHTML = left + right;
-      }
+      window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
 
       /* KaTeX 渲染公式 */
       if (window.renderMathInElement){
@@ -200,7 +219,7 @@
       window.scrollTo(0, 0);
     }).catch(function(){
       article.innerHTML =
-        '<p class="empty">文章不存在或尚未发布：' + escapeHtml(file) + '</p>';
+        '<p class="empty">' + I18N.t('post_missing') + escapeHtml(file) + '</p>';
     });
   }
 })();

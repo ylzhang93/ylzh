@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/i18n.js"></script>
 
 <!-- KaTeX：多 CDN 自动回退（jsdelivr → npmmirror → unpkg） -->
 <script>
@@ -70,18 +71,19 @@
 <nav id="nav" aria-label="主导航">
   <a class="brand" href="#top">zyl</a>
   <div class="nav-links">
-    <a href="#about">关于<span class="en">About</span></a>
-    <a href="#research">研究<span class="en">Research</span></a>
-    <a href="blog.html">博客<span class="en">Blog</span></a>
-    <a href="#contact">联系<span class="en">Contact</span></a>
+    <a href="#about" data-i18n="nav_about">关于</a>
+    <a href="#research" data-i18n="nav_research">研究</a>
+    <a href="blog.html" data-i18n="nav_blog">博客</a>
+    <a href="#contact" data-i18n="nav_contact">联系</a>
+    <button class="lang-btn" data-i18n-toggle type="button" aria-label="切换语言">EN</button>
   </div>
 </nav>
 
 <header id="top">
   <canvas id="knot" aria-hidden="true"></canvas>
   <div class="hero-inner">
-    <p class="overline">数学博士研究生 · PhD Student in Mathematics</p>
-    <!-- TODO: 把 zyl 替换为你的名字；想要中文名的话，在 zyl 后面加 <span class="cn">中文名</span> -->
+    <!-- TODO: 把 zyl 替换为你的名字 -->
+    <p class="overline" data-i18n="hero_overline">数学博士研究生</p>
     <h1 class="name">zyl</h1>
     <div class="formula-hero">\[ e^{i\pi} + 1 = 0 \]</div>
   </div>
@@ -90,54 +92,53 @@
 
 <main>
   <section id="about">
-    <h2 class="sec reveal">关于 · About</h2>
+    <h2 class="sec reveal" data-i18n="about_title">关于</h2>
     <div class="about">
       <figure class="portrait reveal">
         <img src="source/img/wuzhu.jpg" alt="portrait 照片">
       </figure>
       <div class="reveal">
-        <p>我是 zyl，一名数学博士生，对代数几何、模空间与数论怀有持久的兴趣。这个页面是一个安静的地方——安放我对数学的一些想法与记录。</p>
-        <p class="en">I am a PhD student in mathematics, with a lasting interest in algebraic geometry, moduli spaces and number theory. This page is a quiet corner for my mathematical thoughts and notes.</p>
+        <p data-i18n="about_1">我是 zyl，一名数学博士生，对代数几何、模空间与数论怀有持久的兴趣。这个页面是一个安静的地方——安放我对数学的一些想法与记录。</p>
       </div>
     </div>
   </section>
 
   <section id="research">
-    <h2 class="sec reveal">研究兴趣 · Research</h2>
+    <h2 class="sec reveal" data-i18n="research_title">研究兴趣</h2>
     <div class="cards">
       <div class="card reveal">
-        <h3>代数几何<span class="en">Algebraic Geometry</span></h3>
+        <h3 data-i18n="card1_title">代数几何</h3>
         <div class="formula">\[ \chi(\mathcal{O}_X) = \sum_{i \ge 0} (-1)^i \dim H^i(X,\mathcal{O}_X) \]</div>
-        <p>层的上同调、光滑与奇点。<span class="en" style="font-style:italic;opacity:.8"> Sheaf cohomology, smoothness and singularities.</span></p>
+        <p data-i18n="card1_desc">层的上同调、光滑与奇点。</p>
       </div>
       <div class="card reveal">
-        <h3>模空间<span class="en">Moduli Spaces</span></h3>
+        <h3 data-i18n="card2_title">模空间</h3>
         <div class="formula">\[ \dim \mathcal{M}_g = 3g - 3 \]</div>
-        <p>曲线的模空间、GIT 与紧化。<span class="en" style="font-style:italic;opacity:.8"> Moduli of curves, GIT and compactification.</span></p>
+        <p data-i18n="card2_desc">曲线的模空间、GIT 与紧化。</p>
       </div>
       <div class="card reveal">
-        <h3>数论<span class="en">Number Theory</span></h3>
+        <h3 data-i18n="card3_title">数论</h3>
         <div class="formula">\[ \zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s} \]</div>
-        <p>算术对象中的对称与秩序。<span class="en" style="font-style:italic;opacity:.8"> Symmetry and order in arithmetic objects.</span></p>
+        <p data-i18n="card3_desc">算术对象中的对称与秩序。</p>
       </div>
     </div>
   </section>
 
   <section id="contact">
-    <h2 class="sec reveal">联系 · Contact</h2>
+    <h2 class="sec reveal" data-i18n="contact_title">联系</h2>
     <div class="contact-links">
       <!-- TODO: 修改为你的邮箱 -->
       <a class="reveal" href="mailto:496543081@qq.com"><span class="lbl">Email</span>496543081@qq.com</a>
       <!-- TODO: 创建 GitHub 账号后，把地址改为 https://github.com/你的用户名 -->
       <a class="reveal" href="https://github.com/" target="_blank" rel="noopener"><span class="lbl">GitHub</span>github.com/你的用户名</a>
     </div>
-    <p class="contact-note reveal">欢迎来信交流数学。Always happy to talk math.</p>
+    <p class="contact-note reveal" data-i18n="contact_note">欢迎来信交流数学。</p>
   </section>
 </main>
 
 <footer>
   <p class="motto">For life, for math, for entertainment.</p>
-  <p class="copy">© <span id="year">2026</span> zyl · Made with paper &amp; ink</p>
+  <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
 </footer>
 
 <script>
@@ -146,6 +147,12 @@
 
   /* ---------- 年份 ---------- */
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ---------- 页面标题随语言切换 ---------- */
+  window.onLangChange = function(){
+    document.title = I18N.t('page_title');
+  };
+  window.onLangChange(I18N.lang);
 
   /* ---------- 导航滚动状态与当前位置 ---------- */
   var nav = document.getElementById('nav');

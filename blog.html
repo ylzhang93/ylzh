@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>博客 · Blog — zyl</title>
+<title>博客 · zyl</title>
 <meta name="description" content="zyl 的数学博客：代数几何、模空间、数论的笔记与思考。">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
 
@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
+<script src="assets/i18n.js"></script>
 </head>
 
 <body>
@@ -19,28 +20,29 @@
 <nav aria-label="主导航">
   <a class="brand" href="index.html">zyl</a>
   <div class="nav-links">
-    <a href="index.html#about">关于<span class="en">About</span></a>
-    <a href="index.html#research">研究<span class="en">Research</span></a>
-    <a href="blog.html" class="active">博客<span class="en">Blog</span></a>
-    <a href="index.html#contact">联系<span class="en">Contact</span></a>
+    <a href="index.html#about" data-i18n="nav_about">关于</a>
+    <a href="index.html#research" data-i18n="nav_research">研究</a>
+    <a href="blog.html" class="active" data-i18n="nav_blog">博客</a>
+    <a href="index.html#contact" data-i18n="nav_contact">联系</a>
+    <button class="lang-btn" data-i18n-toggle type="button" aria-label="切换语言">EN</button>
   </div>
 </nav>
 
 <header class="page-head">
-  <h1>博客 · Blog</h1>
-  <p class="sub">用 Markdown 与 \(\LaTeX\) 记录数学的思考。</p>
+  <h1 data-i18n="blog_title">博客</h1>
+  <p class="sub" data-i18n="blog_sub">用 Markdown 与 LaTeX 语法，记录数学的思考。</p>
 </header>
 
 <main>
   <ol id="post-list" class="post-list"></ol>
-  <p id="empty" class="empty" hidden>
+  <p id="empty" class="empty" data-i18n-html="blog_empty" hidden>
     还没有文章——写第一篇吧：<code>python new_post.py "文章标题"</code>
   </p>
 </main>
 
 <footer>
   <p class="motto">For life, for math, for entertainment.</p>
-  <p class="copy">© <span id="year">2026</span> zyl · Made with paper &amp; ink</p>
+  <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
 </footer>
 
 <script>
@@ -48,41 +50,64 @@
   'use strict';
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  var posts = [];
+  var list = document.getElementById('post-list');
+  var empty = document.getElementById('empty');
+  var loaded = false;   /* 清单加载完成后才允许渲染列表 */
+
+  /* 标题按语言取：title_zh / title_en，缺省回退到 title */
+  function titleFor(p){
+    return (I18N.lang === 'zh' ? p.title_zh : p.title_en) || p.title || '';
+  }
+
+  function renderList(){
+    list.innerHTML = '';
+    if (!posts.length){
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
+    posts.forEach(function(p){
+      var li = document.createElement('li');
+      var a = document.createElement('a');
+      a.href = 'post.html?p=' + encodeURIComponent(p.file);
+      var d = document.createElement('span');
+      d.className = 'date';
+      d.textContent = p.date;
+      var t = document.createElement('span');
+      t.className = 'title';
+      t.textContent = titleFor(p);
+      a.appendChild(d);
+      a.appendChild(t);
+      if (Array.isArray(p.tags) && p.tags.length){
+        var tg = document.createElement('span');
+        tg.className = 'tags';
+        p.tags.forEach(function(x){
+          var s = document.createElement('span');
+          s.className = 'tag';
+          s.textContent = x;
+          tg.appendChild(s);
+        });
+        a.appendChild(tg);
+      }
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+  }
+
+  window.onLangChange = function(){
+    document.title = I18N.t('blog_title') + ' · zyl';
+    if (loaded) renderList();   /* 切换语言时按新语言重排标题 */
+  };
+  window.onLangChange(I18N.lang);
+
   fetch('posts/index.json')
     .then(function(r){ return r.ok ? r.json() : []; })
     .catch(function(){ return []; })
-    .then(function(posts){
-      if (!Array.isArray(posts) || !posts.length){
-        document.getElementById('empty').hidden = false;
-        return;
-      }
-      var list = document.getElementById('post-list');
-      posts.forEach(function(p){
-        var li = document.createElement('li');
-        var a = document.createElement('a');
-        a.href = 'post.html?p=' + encodeURIComponent(p.file);
-        var d = document.createElement('span');
-        d.className = 'date';
-        d.textContent = p.date;
-        var t = document.createElement('span');
-        t.className = 'title';
-        t.textContent = p.title;
-        a.appendChild(d);
-        a.appendChild(t);
-        if (Array.isArray(p.tags) && p.tags.length){
-          var tg = document.createElement('span');
-          tg.className = 'tags';
-          p.tags.forEach(function(x){
-            var s = document.createElement('span');
-            s.className = 'tag';
-            s.textContent = x;
-            tg.appendChild(s);
-          });
-          a.appendChild(tg);
-        }
-        li.appendChild(a);
-        list.appendChild(li);
-      });
+    .then(function(data){
+      posts = Array.isArray(data) ? data : [];
+      loaded = true;
+      renderList();
     });
 })();
 </script>

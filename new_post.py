@@ -70,6 +70,7 @@ def save_manifest(posts):
 def main():
     ap = argparse.ArgumentParser(description="新建一篇数学博客文章")
     ap.add_argument("title", help="文章标题")
+    ap.add_argument("--title-en", default="", help="可选：英文标题（语言切换时显示）")
     ap.add_argument("--tags", default="", help="逗号分隔的标签，如：代数几何,笔记")
     ap.add_argument("--slug", default="", help="可选的文件名 slug（默认由标题生成）")
     args = ap.parse_args()
@@ -102,17 +103,22 @@ def main():
         f.write(TEMPLATE.replace("{title}", title))
 
     posts = load_manifest()
-    posts.append({
+    entry = {
         "file": relpath,
         "title": title,
         "date": date,
         "tags": tags,
-    })
+    }
+    if args.title_en.strip():
+        entry["title_en"] = args.title_en.strip()
+    posts.append(entry)
     save_manifest(posts)
 
     print("已创建文章：")
     print("  文件   ", filepath)
     print("  标题   ", title)
+    if args.title_en.strip():
+        print("  英文标题", args.title_en.strip())
     print("  日期   ", date)
     print("  标签   ", ", ".join(tags) if tags else "（无）")
     print()

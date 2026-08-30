@@ -49,12 +49,18 @@ nav.scrolled{border-bottom-color:var(--line)}
   font-size:.78rem;letter-spacing:.16em;position:relative;padding-bottom:4px;
   transition:color .3s;
 }
-.nav-links a .en{margin-left:.35em;opacity:.65}
 .nav-links a:hover{color:var(--ink)}
 .nav-links a.active{color:var(--ink)}
 .nav-links a.active::after{
   content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--accent);
 }
+.lang-btn{
+  font-family:var(--sans);font-size:.7rem;letter-spacing:.1em;
+  padding:.28rem .72rem;border:1px solid var(--line);border-radius:99px;
+  background:transparent;color:var(--ink-soft);cursor:pointer;align-self:center;
+  transition:border-color .3s, color .3s;
+}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ---------- 首屏（首页） ---------- */
 header{
@@ -110,7 +116,6 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 .portrait:hover{filter:grayscale(0%) contrast(1)}
 .portrait img{display:block;width:100%;height:auto;border-radius:2px}
 .about p{margin-bottom:1.1rem}
-.about p.en{color:var(--ink-soft);font-size:.95rem;font-style:italic}
 
 /* 研究兴趣 */
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
@@ -121,10 +126,6 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 }
 .card:hover{transform:translateY(-4px);box-shadow:0 16px 32px -20px rgba(35,33,28,.45)}
 .card h3{font-size:1.12rem;font-weight:500}
-.card h3 .en{
-  display:block;font-family:var(--sans);font-size:.64rem;font-weight:500;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);margin-top:.4rem;
-}
 .card .formula{
   margin-top:1.1rem;padding-top:.95rem;border-top:1px dashed var(--line);
   color:var(--accent);font-size:.95rem;overflow-x:auto;
@@ -248,7 +249,6 @@ footer .copy{font-family:var(--sans);font-size:.7rem;letter-spacing:.18em}
   .about{grid-template-columns:1fr;gap:1.8rem}
   .portrait{width:104px}
   .cards{grid-template-columns:1fr}
-  .nav-links a .en{display:none}
   section{padding:4rem 0 1rem}
   .page-head{padding-top:8rem}
   .post-list a{flex-wrap:wrap;gap:.35rem 1rem;padding:1.05rem .2rem}
