@@ -50,6 +50,8 @@ git commit -m "new post: 文章标题"
 git push
 ```
 
+> 提示：`new_post.py` 是**命令行备选方案**，与网页编辑器（write.html）等价。两者混用时，网页上发过的文章不在本地仓库里，推送前先 `git pull --rebase origin main` 再 `git push`，避免分叉冲突。
+
 ### 写作语法
 
 文章就是 Markdown 文件，数学公式用 LaTeX 语法：
