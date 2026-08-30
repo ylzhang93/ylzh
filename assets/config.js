@@ -2,9 +2,9 @@
    站点配置
    ============================================================ */
 window.SITE_CONFIG = {
-  /* TODO: 你的 GitHub 用户名 */
+  /* GitHub 用户名 */
   owner: '',
-  /* TODO: 仓库名（发布到 GitHub Pages 的那个仓库） */
+  /* TODO: 仓库名（发布到 GitHub Pages 的那个仓库，如 ylzhang93.github.io 或 azhangbiu） */
   repo: '',
   /* 默认分支 */
   branch: 'main',
