@@ -58,10 +58,32 @@
     });
   }
 
+  /* 定理环境标签（随界面语言） */
+  var THM_LABELS = {
+    zh: { theorem: '定理', lemma: '引理', proposition: '命题', corollary: '推论',
+          definition: '定义', proof: '证明', remark: '注', example: '例',
+          conjecture: '猜想', claim: '断言' },
+    en: { theorem: 'Theorem', lemma: 'Lemma', proposition: 'Proposition', corollary: 'Corollary',
+          definition: 'Definition', proof: 'Proof', remark: 'Remark', example: 'Example',
+          conjecture: 'Conjecture', claim: 'Claim' }
+  };
+  /* :::theorem 标题 ... ::: 块 */
+  var THM_RE = /^:::([a-zA-Z]+)[ \t]*([^\n]*)\n([\s\S]*?)^:::[ \t]*\n?/gm;
+
   /* Markdown → 安全 HTML（公式已还原为 $…$ 文本，未做 KaTeX 排版） */
-  function renderMarkdown(md){
+  function renderMarkdown(md, lang){
+    lang = (lang === 'en') ? 'en' : 'zh';
     var mathSpans = [];
     function protectSeg(seg){
+      /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
+      seg = seg.replace(THM_RE, function(_, type, title, body){
+        var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
+        var t = (title || '').trim();
+        var head = '<div class="thm-head">' + label +
+          (t ? '<span class="thm-title">' + escapeHtml(t) + '</span>' : '') + '</div>';
+        return '<div class="thm thm-' + type + '">' + head + '\n\n' +
+          body.trim() + '\n\n</div>';
+      });
       seg = seg.replace(/\[math\]\s*([\s\S]*?)\s*\[\/math\]/g, function(_, inner){
         return /\n/.test(inner)
           ? '\n$$\n' + inner.trim() + '\n$$\n'

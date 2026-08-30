@@ -60,6 +60,7 @@ git push
 | 块级公式 | `$$ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi} $$` |
 | 多行公式（align* 等） | `$$ \begin{align*} a &= b + c \\ &= d \end{align*} $$`（工具栏 `env` 按钮一键插入） |
 | 行内（LaTeX 风格） | `\(x_i\)` |
+| 定理环境 | `:::theorem 费马小定理` … `:::`（支持 theorem/lemma/proposition/corollary/definition/proof/remark/example/conjecture/claim，自动编号；工具栏 `∎` 一键插入） |
 | 块级（LaTeX 风格） | `\[ \dim \mathcal{M}_g = 3g-3 \]` |
 | AoPS 风格 | `[math]a^2+b^2=c^2[/math]`，多行 `[math]...[/math]` 自动按块级 |
 | 标题 | `# 一级`、`## 二级`、`### 三级` |
@@ -72,6 +73,22 @@ git push
 - **数学环境必须放在块级公式里**：`\begin{align*}...\end{align*}` 要包在 `$$...$$` 或 `\[...\]` 中（工具栏 `env` 按钮自动完成），裸写不会被识别
 - 数学符号直接写 LaTeX 命令即可：`\infty`、`\sum`、`\int`、`\mathbb{R}`、`\alpha` 等
 - 想新建文章但标题是中文时，文件名会退化为 `post-日期`，建议用 `--slug` 指定英文名
+
+### 定理环境
+
+用 `:::` 包裹，第一行写类型（可加标题），内容支持 Markdown 与公式：
+
+```markdown
+:::theorem 费马小定理
+若 $p$ 是素数且 $p \nmid a$，则
+
+$$
+a^{p-1} \equiv 1 \pmod p
+$$
+:::
+```
+
+自动渲染为带编号的卡片（定理 1、引理 1、命题 1……各类型独立计数），`proof` 类型末尾自动加 ∎。支持的类型：`theorem`、`lemma`、`proposition`、`corollary`、`definition`、`proof`、`remark`、`example`、`conjecture`、`claim`。工具栏 **`∎`** 按钮可一键插入模板。
 
 ### 隐藏内容（点击展开，AoPS `\hide` 的替代）
 

@@ -364,6 +364,43 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
   background:transparent;cursor:pointer;transition:background .2s;
 }
 .fmt-panel button:hover{background:rgba(47,74,107,.15)}
+
+/* ---------- 定理环境卡片（:::theorem 等） ---------- */
+article.post .thm{
+  margin:1.6rem 0;border:1px solid var(--line);border-radius:8px;
+  background:var(--paper-2);padding:1.1rem 1.3rem 1.25rem;
+}
+article.post .thm-head{
+  font-family:var(--sans);font-size:.74rem;font-weight:600;
+  letter-spacing:.18em;color:var(--accent);margin-bottom:.75rem;
+}
+article.post .thm-title{
+  color:var(--ink-soft);font-weight:400;letter-spacing:.02em;margin-left:.6em;
+}
+article.post .thm > p:last-child{margin-bottom:0}
+article.post .thm-proof::after{
+  content:"∎";display:block;text-align:right;margin-top:.6rem;
+  color:var(--ink-soft);font-size:1.05rem;
+}
+/* 自动编号：定理 1、引理 2…… 各类型独立计数 */
+article.post .thm-theorem{counter-increment:thm}
+article.post .thm-theorem .thm-head::after{content:" " counter(thm)}
+article.post .thm-lemma{counter-increment:lem}
+article.post .thm-lemma .thm-head::after{content:" " counter(lem)}
+article.post .thm-proposition{counter-increment:prop}
+article.post .thm-proposition .thm-head::after{content:" " counter(prop)}
+article.post .thm-corollary{counter-increment:cor}
+article.post .thm-corollary .thm-head::after{content:" " counter(cor)}
+article.post .thm-definition{counter-increment:def}
+article.post .thm-definition .thm-head::after{content:" " counter(def)}
+article.post .thm-example{counter-increment:ex}
+article.post .thm-example .thm-head::after{content:" " counter(ex)}
+article.post .thm-remark{counter-increment:rem}
+article.post .thm-remark .thm-head::after{content:" " counter(rem)}
+article.post .thm-conjecture{counter-increment:conj}
+article.post .thm-conjecture .thm-head::after{content:" " counter(conj)}
+article.post .thm-claim{counter-increment:claim}
+article.post .thm-claim .thm-head::after{content:" " counter(claim)}
 .editor-form input:focus,.editor-form textarea:focus,.editor-form select:focus{
   outline:none;border-color:var(--accent);
 }
