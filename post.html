@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/i18n.js"></script>
+<script src="assets/libs.js"></script>
 </head>
 
 <body>
@@ -39,6 +40,7 @@
 <footer>
   <p class="motto">For life, for math, for entertainment.</p>
   <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
+  <a class="write-link" href="write.html" data-i18n="write_link">写作</a>
 </footer>
 
 <script>
@@ -47,60 +49,13 @@
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  /* ========== 多 CDN 加载（jsdelivr → npmmirror → unpkg） ========== */
-  function loadScript(urls, done){
-    var i = 0;
-    (function next(){
-      if (i >= urls.length) return done(false);
-      var s = document.createElement('script');
-      s.src = urls[i++];
-      s.onload = function(){ done(true); };
-      s.onerror = next;
-      document.head.appendChild(s);
-    })();
-  }
-  function loadCss(src){
-    var l = document.createElement('link');
-    l.rel = 'stylesheet';
-    l.href = src;
-    document.head.appendChild(l);
-  }
-
-  var JSD   = function(path){ return 'https://cdn.jsdelivr.net/npm/' + path; };
-  var NPMM  = function(path){ return 'https://registry.npmmirror.com/' + path; };
-  var UNPKG = function(path){ return 'https://unpkg.com/' + path; };
-  function chain(path){
-    return [JSD(path), NPMM(path), UNPKG(path)];
-  }
-
-  /* 库加载顺序：marked → dompurify → katex + auto-render → 渲染文章 */
-  loadScript(chain('marked@5.1.2/marked.min.js'), function(ok){
-    if (!ok) return fail();
-    loadScript(chain('dompurify@3.1.6/dist/purify.min.js'), function(ok2){
-      if (!ok2) return fail();
-      loadScript(chain('katex@0.16.11/dist/katex.min.js'), function(ok3){
-        if (!ok3) return fail();
-        loadCss('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
-        loadScript(chain('katex@0.16.11/dist/contrib/auto-render.min.js'), function(ok4){
-          if (!ok4) return fail();
-          renderPost();
-        });
-      });
-    });
-  });
-
-  function fail(){
-    document.getElementById('post').innerHTML =
-      '<p class="empty">' + I18N.t('load_fail') + '</p>';
-  }
-
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
 
-  var state = { posts: [], file: null, entry: null };
+  var state = { posts: [], file: null, entry: null, md: '' };
 
   /* 标题按语言取：title_zh / title_en，缺省回退到 title */
   function titleFor(p){
@@ -112,7 +67,7 @@
     if (!state.file) return;
     var entry = state.entry;
     var title = entry ? titleFor(entry)
-                      : ((state.md || '').match(/^#\s+(.+)$/m) || ['', I18N.t('no_post')])[1].trim();
+                      : ((state.md.match(/^#\s+(.+)$/m) || ['', I18N.t('no_post')])[1]).trim();
     document.title = title + ' · zyl';
 
     var navEl = document.getElementById('post-nav');
@@ -142,86 +97,61 @@
       return;
     }
 
-    Promise.all([
-      /* 文章清单：标题 / 日期 / 标签 / 上一篇下一篇 */
-      fetch('posts/index.json')
-        .then(function(r){ return r.ok ? r.json() : []; })
-        .catch(function(){ return []; }),
-      /* 文章正文 */
-      fetch(file).then(function(r){
-        if (!r.ok) throw new Error('not found');
-        return r.text();
-      })
-    ]).then(function(res){
-      state.posts = Array.isArray(res[0]) ? res[0] : [];
-      state.file = file;
-      state.md = res[1];
-      state.entry = null;
-      state.posts.forEach(function(x){ if (x && x.file === file) state.entry = x; });
-      var md = res[1];
-
-      /* 数学保护：围栏代码块原样保留，其余部分先转换 [math] 标签，
-         再把数学片段换成占位符，避免 Markdown 引擎误解析公式里的 _ * 等字符 */
-      var mathSpans = [];
-      function protectSeg(seg){
-        seg = seg.replace(/\[math\]\s*([\s\S]*?)\s*\[\/math\]/g, function(_, inner){
-          return /\n/.test(inner)
-            ? '\n$$\n' + inner.trim() + '\n$$\n'
-            : '$' + inner.trim() + '$';
-        });
-        function p(re){
-          seg = seg.replace(re, function(m){
-            mathSpans.push(m);
-            return '\u27E6' + (mathSpans.length - 1) + '\u27E7';
-          });
-        }
-        p(/\$\$[\s\S]+?\$\$/g);       /* 块级 $$...$$ */
-        p(/\$[^$\n]+?\$/g);           /* 行内 $...$ */
-        p(/\\\[[\s\S]+?\\\]/g);       /* \[...\] */
-        p(/\\\([\s\S]+?\\\)/g);       /* \(...\) */
-        return seg;
+    window.LIBS.load(function(ok){
+      if (!ok){
+        article.innerHTML = '<p class="empty">' + I18N.t('load_fail') + '</p>';
+        return;
       }
-      md = md.split(/(```[^\n]*\n[\s\S]*?```)/g)
-            .map(function(seg, i){ return i % 2 === 1 ? seg : protectSeg(seg); })
-            .join('');
-
-      var html = window.marked.parse ? window.marked.parse(md) : window.marked(md);
-      /* 还原公式并做 HTML 转义：& < > 由浏览器解码，KaTeX 从文本节点读回原字符 */
-      html = html.replace(/\u27E6(\d+)\u27E7/g, function(_, i){
-        return escapeHtml(mathSpans[+i]);
-      });
-      var clean = window.DOMPurify.sanitize(html);
-
-      var title = state.entry ? titleFor(state.entry) : ((md.match(/^#\s+(.+)$/m) || [,''])[1] || '').trim();
-      var date  = state.entry ? state.entry.date : ((file.match(/^posts\/(\d{4}-\d{2}-\d{2})/) || [,''])[1]);
-      var tags  = state.entry && Array.isArray(state.entry.tags) ? state.entry.tags : [];
-
-      var meta = '<header class="post-meta"><span>' + escapeHtml(date) + '</span>' +
-        tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('') +
-        '</header>';
-
-      article.innerHTML = '<h1>' + escapeHtml(title) + '</h1>' + meta + clean;
-
-      window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
-
-      /* KaTeX 渲染公式 */
-      if (window.renderMathInElement){
-        renderMathInElement(article, {
-          delimiters: [
-            {left: '$$', right: '$$', display: true},
-            {left: '$', right: '$', display: false},
-            {left: '\\[', right: '\\]', display: true},
-            {left: '\\(', right: '\\)', display: false}
-          ],
-          throwOnError: false
-        });
-      }
-      window.scrollTo(0, 0);
-    }).catch(function(){
-      article.innerHTML =
-        '<p class="empty">' + I18N.t('post_missing') + escapeHtml(file) + '</p>';
+      loadAndRender();
     });
+
+    function loadAndRender(){
+      Promise.all([
+        fetch('posts/index.json')
+          .then(function(r){ return r.ok ? r.json() : []; })
+          .catch(function(){ return []; }),
+        fetch(file).then(function(r){
+          if (!r.ok) throw new Error('not found');
+          return r.text();
+        })
+      ]).then(function(res){
+        state.posts = Array.isArray(res[0]) ? res[0] : [];
+        state.file = file;
+        state.md = res[1];
+        state.entry = null;
+        state.posts.forEach(function(x){ if (x && x.file === file) state.entry = x; });
+
+        var md = res[1];
+        /* 清单里有标题时，去掉正文开头重复的 # 标题（避免双标题） */
+        if (state.entry) md = md.replace(/^#\s+.*$/m, '').replace(/^\n+/, '');
+
+        var html = window.LIBS.renderMarkdown(md);
+        var title = state.entry ? titleFor(state.entry)
+                                : ((md.match(/^#\s+(.+)$/m) || [,''])[1] || '').trim();
+        var date  = state.entry ? state.entry.date : ((file.match(/^posts\/(\d{4}-\d{2}-\d{2})/) || [,''])[1]);
+        var tags  = state.entry && Array.isArray(state.entry.tags) ? state.entry.tags : [];
+
+        var meta = '<header class="post-meta"><span>' + escapeHtml(date) + '</span>' +
+          tags.map(function(t){
+            return '<a class="tag" href="blog.html?tag=' + encodeURIComponent(t) + '">' +
+              escapeHtml(t) + '</a>';
+          }).join('') +
+          '</header>';
+
+        article.innerHTML = '<h1>' + escapeHtml(title) + '</h1>' + meta + html;
+
+        window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
+
+        window.LIBS.renderMathIn(article);
+        window.scrollTo(0, 0);
+      }).catch(function(){
+        article.innerHTML =
+          '<p class="empty">' + I18N.t('post_missing') + escapeHtml(file) + '</p>';
+      });
+    }
   }
+
+  renderPost();
 })();
 </script>
 </body>

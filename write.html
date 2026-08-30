@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>写作 · zyl</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/i18n.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/search.js"></script>
+<script src="assets/libs.js"></script>
+</head>
+
+<body>
+
+<nav aria-label="主导航">
+  <a class="brand" href="index.html">zyl</a>
+  <div class="nav-links">
+    <a href="index.html#about" data-i18n="nav_about">关于</a>
+    <a href="index.html#research" data-i18n="nav_research">研究</a>
+    <a href="blog.html" data-i18n="nav_blog">博客</a>
+    <a href="index.html#contact" data-i18n="nav_contact">联系</a>
+    <button class="lang-btn" data-i18n-toggle type="button" aria-label="切换语言">EN</button>
+  </div>
+</nav>
+
+<main class="write-wrap">
+  <h1 class="sec" data-i18n="write_title" style="margin-top:6.5rem">写作</h1>
+
+  <!-- 口令门禁（仅站长） -->
+  <div id="gate" class="gate" hidden>
+    <p data-i18n="gate_prompt">此页面仅限站长使用，请输入口令。</p>
+    <div class="row">
+      <input id="gate-input" type="password" data-i18n-ph="gate_ph" placeholder="口令">
+      <button id="gate-btn" class="btn" type="button" data-i18n="gate_unlock">解锁</button>
+    </div>
+    <p id="gate-err" class="err" hidden data-i18n="gate_wrong">口令错误，请重试。</p>
+  </div>
+
+  <!-- 编辑器 -->
+  <div id="editor" class="editor-form" hidden>
+
+    <div class="frow">
+      <label data-i18n="f_existing">编辑已有文章</label>
+      <select id="f-existing">
+        <option value="" data-i18n="f_new">（新文章）</option>
+      </select>
+    </div>
+
+    <div class="frow-inline">
+      <div class="frow">
+        <label data-i18n="f_title">标题</label>
+        <input id="f-title" type="text">
+      </div>
+      <div class="frow">
+        <label data-i18n="f_title_en">英文标题（可选）</label>
+        <input id="f-title-en" type="text">
+      </div>
+    </div>
+
+    <div class="frow">
+      <label data-i18n="f_tags">标签（回车添加，可多个）</label>
+      <input id="f-tags" type="text" list="tag-suggestions">
+      <datalist id="tag-suggestions"></datalist>
+      <div id="tag-chips" class="chips"></div>
+    </div>
+
+    <div class="frow">
+      <label data-i18n="f_slug">文件名 slug</label>
+      <input id="f-slug" type="text" placeholder="e.g. elliptic-curves">
+      <p id="filename-hint" class="filename-hint">posts/….md</p>
+    </div>
+
+    <div class="frow">
+      <label data-i18n="f_body">正文（Markdown + LaTeX）</label>
+      <textarea id="f-body" spellcheck="false"></textarea>
+    </div>
+
+    <div class="frow">
+      <label data-i18n="token_lbl">GitHub Token</label>
+      <input id="f-token" type="password" autocomplete="off">
+      <p class="filename-hint" data-i18n="token_help">需要仓库 contents 读写权限</p>
+    </div>
+
+    <div class="actions">
+      <button id="btn-preview" class="btn btn-ghost" type="button" data-i18n="btn_preview">预览</button>
+      <button id="btn-save" class="btn" type="button" data-i18n="btn_save">保存发布</button>
+      <button id="btn-delete" class="btn btn-danger" type="button" data-i18n="btn_delete" hidden>删除文章</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+
+    <div id="preview" class="preview-pane" hidden>
+      <h3 data-i18n="btn_preview">预览</h3>
+      <article id="preview-body" class="post"></article>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p class="motto">For life, for math, for entertainment.</p>
+  <p class="copy">© <span id="year">2026</span> zyl · <span data-i18n="footer_copy">纸与墨写就</span></p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+  var cfg = window.SITE_CONFIG;
+  var TOKEN_KEY = 'zyl-token';
+  var UNLOCK_KEY = 'zyl-unlocked';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var gate = $('gate'), editor = $('editor');
+  var editing = null;          /* {file, date} 编辑中的文章；null = 新文章 */
+  var tags = [];
+  var slugTouched = false;
+  var token = '';
+
+  /* ---------- 语言切换 ---------- */
+  window.onLangChange = function(){
+    document.title = I18N.t('write_title') + ' · zyl';
+    var ph = { 'gate-input': 'gate_ph', 'f-token': 'token_ph' };
+    Object.keys(ph).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.placeholder = I18N.t(ph[id]);
+    });
+  };
+  window.onLangChange(I18N.lang);
+
+  /* ---------- 门禁 ---------- */
+  function openEditor(){
+    gate.hidden = true;
+    editor.hidden = false;
+    if (!cfg.owner || !cfg.repo){
+      showMsg(I18N.t('cfg_missing'), 'err');
+    }
+    init();
+  }
+  if (cfg.editorKey && localStorage.getItem(UNLOCK_KEY) !== '1'){
+    gate.hidden = false;
+    $('gate-btn').addEventListener('click', function(){
+      if ($('gate-input').value === cfg.editorKey){
+        try { localStorage.setItem(UNLOCK_KEY, '1'); } catch (e) {}
+        openEditor();
+      } else {
+        $('gate-err').hidden = false;
+      }
+    });
+  } else {
+    openEditor();
+  }
+
+  /* ---------- 消息 ---------- */
+  function showMsg(html, type){
+    var m = $('msg');
+    m.className = 'msg ' + (type || 'ok');
+    m.innerHTML = html;
+  }
+
+  /* ---------- 标签 ---------- */
+  function renderChips(){
+    var box = $('tag-chips');
+    box.innerHTML = '';
+    tags.forEach(function(t, i){
+      var c = document.createElement('span');
+      c.className = 'chip';
+      c.textContent = t;
+      c.title = '×';
+      c.addEventListener('click', function(){ tags.splice(i, 1); renderChips(); });
+      box.appendChild(c);
+    });
+  }
+  $('f-tags').addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ','){
+      e.preventDefault();
+      var v = this.value.trim();
+      if (v && tags.indexOf(v) === -1){ tags.push(v); renderChips(); }
+      this.value = '';
+    }
+  });
+
+  /* ---------- slug 自动生成 ---------- */
+  $('f-title').addEventListener('input', function(){
+    if (!slugTouched) $('f-slug').value = window.Search.slugify(this.value);
+    updateFilename();
+  });
+  $('f-slug').addEventListener('input', function(){
+    slugTouched = true;
+    updateFilename();
+  });
+  function updateFilename(){
+    var date = editing ? editing.date : new Date().toISOString().slice(0, 10);
+    var slug = $('f-slug').value.trim() || 'post';
+    $('filename-hint').textContent = 'posts/' + date + '-' + slug + '.md';
+  }
+
+  /* ---------- 正文实时预览（防抖） ---------- */
+  var previewTimer = null;
+  $('f-body').addEventListener('input', function(){
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(renderPreview, 600);
+  });
+  $('btn-preview').addEventListener('click', function(){
+    var p = $('preview');
+    p.hidden = !p.hidden;
+    if (!p.hidden) renderPreview();
+  });
+  function renderPreview(){
+    var body = $('f-body').value;
+    if (!body) return;
+    window.LIBS.load(function(ok){
+      if (!ok){ showMsg(I18N.t('load_fail'), 'err'); return; }
+      var html = window.LIBS.renderMarkdown(body);
+      $('preview-body').innerHTML = html;
+      window.LIBS.renderMathIn($('preview-body'));
+    });
+  }
+
+  /* ---------- 已有文章列表 ---------- */
+  var allPosts = [];
+  function loadExistingList(){
+    fetch('posts/index.json')
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .catch(function(){ return []; })
+      .then(function(posts){
+        allPosts = Array.isArray(posts) ? posts : [];
+        var sel = $('f-existing');
+        allPosts.forEach(function(p){
+          var o = document.createElement('option');
+          o.value = p.file;
+          o.textContent = (p.title_en || p.title || p.file) + '  ·  ' + p.date;
+          sel.appendChild(o);
+        });
+        /* 标签建议 */
+        var d = $('tag-suggestions');
+        window.Search.distinctTags(allPosts).forEach(function(t){
+          var o = document.createElement('option');
+          o.value = t.tag;
+          d.appendChild(o);
+        });
+      });
+  }
+
+  $('f-existing').addEventListener('change', function(){
+    var file = this.value;
+    if (!file){
+      editing = null;
+      $('f-title').value = ''; $('f-title-en').value = '';
+      $('f-body').value = ''; $('f-slug').value = ''; slugTouched = false;
+      tags = []; renderChips();
+      $('btn-delete').hidden = true;
+      updateFilename();
+      return;
+    }
+    fetch(file).then(function(r){ return r.ok ? r.text() : ''; }).then(function(md){
+      var p = null;
+      allPosts.forEach(function(x){ if (x.file === file) p = x; });
+      var m = file.match(/^posts\/(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
+      editing = { file: file, date: p ? p.date : (m ? m[1] : new Date().toISOString().slice(0,10)) };
+      $('f-title').value = p ? (p.title || '') : '';
+      $('f-title-en').value = p ? (p.title_en || '') : '';
+      $('f-slug').value = m ? m[2] : '';
+      slugTouched = true;
+      tags = p && Array.isArray(p.tags) ? p.tags.slice() : [];
+      renderChips();
+      $('f-body').value = md;
+      $('btn-delete').hidden = false;
+      updateFilename();
+      $('preview').hidden = true;
+      window.scrollTo(0, 0);
+    });
+  });
+
+  /* ---------- GitHub API ---------- */
+  function api(method, path, body){
+    return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + path, {
+      method: method,
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function(r){
+      return r.json().then(function(j){ return { ok: r.ok, j: j }; });
+    });
+  }
+  function decodeB64(s){
+    return new TextDecoder().decode(Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }));
+  }
+  function encodeB64(s){
+    return btoa(unescape(encodeURIComponent(s)));
+  }
+  function today(){ return new Date().toISOString().slice(0, 10); }
+  function msgForCommit(what){
+    return (what === 'del' ? 'delete' : (editing ? 'update' : 'add')) + ': ' +
+           (editing ? editing.file : 'post');
+  }
+
+  /* ---------- 保存发布 ---------- */
+  $('btn-save').addEventListener('click', save);
+  function save(){
+    token = $('f-token').value.trim();
+    if (!token){
+      showMsg(I18N.t('need_token'), 'err');
+      return;
+    }
+    var title = $('f-title').value.trim();
+    var body = $('f-body').value;
+    if (!title){ showMsg(I18N.t('need_title'), 'err'); return; }
+    if (!body.trim()){ showMsg(I18N.t('need_body'), 'err'); return; }
+    try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
+
+    var date = editing ? editing.date : today();
+    var slug = $('f-slug').value.trim() || window.Search.slugify(title) || 'post';
+    var file = 'posts/' + date + '-' + slug + '.md';
+
+    showMsg('…', 'ok');
+
+    (function saveLoop(baseFile, n){
+      var path = n > 1 ? baseFile.replace(/\.md$/, '-' + n + '.md') : baseFile;
+      api('GET', path).then(function(res){
+        if (!editing && res.ok){
+          saveLoop(baseFile, n + 1);            /* 新文章重名 → 追加序号 */
+          return;
+        }
+        var sha = res.ok ? res.j.sha : null;
+        var mdBody = body.replace(/\n*$/, '') + '\n';
+        api('PUT', path, {
+          message: msgForCommit('add'),
+          content: encodeB64(mdBody),
+          sha: sha || undefined,
+          branch: cfg.branch
+        }).then(function(putRes){
+          if (!putRes.ok){
+            showMsg(I18N.t('save_fail') + ' ' + escapeHtml(putRes.j.message || ''), 'err');
+            return;
+          }
+          updateIndex(path, function(ok2, msg){
+            if (ok2){
+              showMsg(I18N.t('saved_ok') + ' <a href="post.html?p=' + encodeURIComponent(path) +
+                '" target="_blank">' + path + '</a>', 'ok');
+              loadExistingList();   /* 刷新已有文章下拉框 */
+            } else {
+              showMsg(I18N.t('save_fail') + ' ' + msg, 'err');
+            }
+          });
+        });
+      });
+    })(file, 1);
+  }
+
+  function updateIndex(path, done){
+    api('GET', 'posts/index.json').then(function(res){
+      var posts = res.ok ? JSON.parse(decodeB64(res.j.content)) : [];
+      var entry = { file: path, title: $('f-title').value.trim(), date: (editing ? editing.date : today()) };
+      var te = $('f-title-en').value.trim();
+      if (te) entry.title_en = te;
+      entry.tags = tags.slice();
+
+      var found = false;
+      posts = posts.filter(function(p){
+        if (p.file === path){ found = true; return false; }
+        return true;
+      });
+      posts.push(entry);
+      posts.sort(function(a, b){ return (a.date < b.date) ? 1 : (a.date > b.date ? -1 : 0); });
+
+      api('PUT', 'posts/index.json', {
+        message: 'update posts/index.json',
+        content: encodeB64(JSON.stringify(posts, null, 2) + '\n'),
+        sha: res.ok ? res.j.sha : null,
+        branch: cfg.branch
+      }).then(function(r){
+        if (r.ok){
+          editing = { file: path, date: entry.date };
+          done(true, '');
+        } else {
+          done(false, escapeHtml(r.j.message || ''));
+        }
+      });
+    });
+  }
+
+  /* ---------- 删除文章 ---------- */
+  $('btn-delete').addEventListener('click', function(){
+    if (!editing) return;
+    token = $('f-token').value.trim();
+    if (!token){ showMsg(I18N.t('need_token'), 'err'); return; }
+    if (!window.confirm(I18N.t('del_confirm'))) return;
+
+    api('GET', editing.file).then(function(res){
+      if (!res.ok){
+        showMsg(I18N.t('save_fail') + ' ' + escapeHtml(res.j.message || ''), 'err');
+        return;
+      }
+      api('DELETE', editing.file, {
+        message: msgForCommit('del'),
+        sha: res.j.sha,
+        branch: cfg.branch
+      }).then(function(delRes){
+        if (!delRes.ok){
+          showMsg(I18N.t('save_fail') + ' ' + escapeHtml(delRes.j.message || ''), 'err');
+          return;
+        }
+        api('GET', 'posts/index.json').then(function(idx){
+          var posts = idx.ok ? JSON.parse(decodeB64(idx.j.content)) : [];
+          posts = posts.filter(function(p){ return p.file !== editing.file; });
+          api('PUT', 'posts/index.json', {
+            message: 'update posts/index.json',
+            content: encodeB64(JSON.stringify(posts, null, 2) + '\n'),
+            sha: idx.ok ? idx.j.sha : null,
+            branch: cfg.branch
+          }).then(function(){
+            showMsg(I18N.t('del_ok'), 'ok');
+            $('f-existing').value = '';
+            $('f-existing').dispatchEvent(new Event('change'));
+            loadExistingList();
+          });
+        });
+      });
+    });
+  });
+
+  /* ---------- 初始化 ---------- */
+  function init(){
+    try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
+    if (token) $('f-token').value = token;
+    loadExistingList();
+    updateFilename();
+    $('f-existing').dispatchEvent(new Event('change'));
+  }
+})();
+</script>
+</body>
+</html>

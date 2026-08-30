@@ -10,6 +10,7 @@
 - Canvas 绘制缓慢旋转的三叶扭结（trefoil knot）动画
 - 滚动渐显、导航高亮、响应式，兼容 `prefers-reduced-motion`
 - 数学博客：Markdown 写作，`$...$` 渲染公式，像写 LaTeX 一样简单
+- **网页在线写作**（仅站长可写）+ 全文搜索 + 标签筛选
 
 ## 语言切换
 
@@ -81,6 +82,30 @@ git push
 
 `posts/2026-08-30-euler-identity.md` 是一篇示例文章（演示各种语法），确认后可以删除。
 
+## 网页在线写作（write.html）
+
+在浏览器里直接写博客，发布后 GitHub Pages 自动更新。
+
+1. **配置**：打开 `assets/config.js`，填入你的 GitHub 用户名（`owner`）、仓库名（`repo`）；`editorKey` 设置一个只有你知道的口令（见下方权限说明）
+2. **打开写作页**：`write.html`（页脚有"写作"入口）。输入口令解锁编辑器
+3. **填写**：标题、英文标题（可选）、标签（回车添加多个）、文件名 slug（自动生成可改）、正文（Markdown + LaTeX，右侧有实时预览）、GitHub Token
+4. **保存发布**：文章直接通过 GitHub API 写入仓库（提交到 `main` 分支），一两分钟后博客页可见
+
+### 权限说明（为什么只有你能写）
+
+- 写入操作需要 **GitHub Token**（Personal Access Token，简称 PAT），它等效于仓库的写权限——**只有持有你令牌的人才能改仓库**，访客没有令牌，只能看
+- 令牌创建：GitHub → Settings → Developer settings → Personal access tokens → Generate new token，勾选 `repo`（经典令牌）或 fine-grained 令牌的 `Contents: Read and write`
+- 令牌只保存在**你自己的浏览器 localStorage** 里，不会上传到任何服务器，也绝不写进代码/仓库
+- 写作页的"口令"是写在网页源码里的**隐私帘**：只用来挡住偶然点进来的访客，不构成真正的安全边界——真正的权限由 GitHub 保证。如果想完全隐藏写作入口，删掉页脚的"写作"链接即可
+- 注意：令牌 = 仓库写权限，泄露等于把仓库交给别人，不要分享
+
+### 搜索与标签
+
+- 博客页顶部有**搜索框**：标题 / 标签 / 日期即时匹配；输入后会**全文检索**所有文章正文（首次搜索时按需加载），命中内容会显示带高亮的前后文片段
+- 搜索结果可分享：`blog.html?q=关键词&tag=标签` 会直接打开对应筛选结果
+- **标签栏**：文章全部标签及数量，点击筛选（可多选，标签间是"且"的关系）；文章页的标签也可点击直达筛选
+- 多写标签（一篇 3–6 个），搜索与分类都会更好用
+
 ## 发布到 GitHub Pages
 
 ### 1. 创建仓库（二选一）
@@ -123,11 +148,16 @@ git push -u origin main
 
 ```
 index.html          主页面
-blog.html           博客列表页
+blog.html           博客列表页（搜索 + 标签筛选）
 post.html           文章阅读页（Markdown + KaTeX 渲染）
+write.html          在线写作页（站长专用，GitHub API 直写）
 assets/site.css     共享样式
+assets/i18n.js      中英词典与语言切换
+assets/libs.js      前端库加载（多 CDN 回退）+ Markdown 渲染
+assets/search.js    搜索 / 标签 / slug 工具
+assets/config.js    站点配置（owner / repo / 写作口令）
 posts/              博客文章（.md）与清单（index.json）
-new_post.py         发帖脚本（python new_post.py "标题"）
+new_post.py         发帖脚本（命令行备选，python new_post.py "标题"）
 source/img/         照片
 legacy/             旧版网站归档（仅本地保留，不推送，确认后可删除）
 ```

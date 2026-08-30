@@ -190,6 +190,8 @@ article.post h1{font-size:clamp(1.9rem,5.5vw,2.6rem);font-weight:500;line-height
   margin-bottom:2.4rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line);
   font-family:var(--sans);font-size:.72rem;letter-spacing:.14em;color:var(--ink-soft);
 }
+.post-meta a.tag{text-decoration:none;border-bottom:none;display:inline-block}
+.post-meta a.tag:hover{background:rgba(47,74,107,.16)}
 article.post h2{font-size:1.42rem;font-weight:500;margin:2.8rem 0 1rem}
 article.post h3{font-size:1.15rem;font-weight:500;margin:2rem 0 .8rem}
 article.post p{margin-bottom:1.2rem}
@@ -229,6 +231,107 @@ article.post a:hover{border-bottom-color:var(--accent)}
   text-transform:uppercase;color:var(--ink-soft);margin-bottom:.25rem;
 }
 .post-nav .next{text-align:right}
+
+/* ---------- 搜索与标签（博客页） ---------- */
+.search-row{margin-bottom:1.6rem}
+.searchbox{
+  width:100%;font-family:var(--sans);font-size:.95rem;color:var(--ink);
+  background:var(--paper-2);border:1px solid var(--line);border-radius:8px;
+  padding:.7rem 1rem;transition:border-color .3s;
+}
+.searchbox:focus{outline:none;border-color:var(--accent)}
+.tagbar{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.8rem;align-items:center}
+.tagbar .tag{
+  font-family:var(--sans);font-size:.66rem;letter-spacing:.1em;cursor:pointer;
+  color:var(--accent);background:rgba(47,74,107,.08);border:1px solid rgba(47,74,107,.22);
+  padding:.22rem .7rem;border-radius:99px;transition:background .3s,color .3s;
+}
+.tagbar .tag:hover{background:rgba(47,74,107,.16)}
+.tagbar .tag.active{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.tagbar .tag .n{opacity:.65;margin-left:.3em;font-size:.85em}
+.post-list a{flex-wrap:wrap}
+.snippet{
+  flex-basis:100%;margin-top:.35rem;font-size:.85rem;color:var(--ink-soft);
+  font-style:italic;line-height:1.6;
+}
+mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:2px}
+
+/* ---------- 写作页（站长专用） ---------- */
+.write-wrap{max-width:46rem;margin:0 auto;padding:0 1.5rem}
+.gate{
+  margin-top:3rem;padding:2.5rem 2rem;text-align:center;
+  background:var(--paper-2);border:1px solid var(--line);border-radius:10px;
+}
+.gate p{margin-bottom:1.3rem;color:var(--ink-soft)}
+.gate .row{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.gate input[type=password]{
+  font-family:var(--sans);font-size:.95rem;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;
+  padding:.55rem .9rem;width:min(20rem,80%);transition:border-color .3s;
+}
+.gate input[type=password]:focus{outline:none;border-color:var(--accent)}
+.gate .err{margin-top:1rem;color:#a03b2a;font-size:.85rem}
+
+.editor-form{margin-top:2rem}
+.editor-form .frow{margin-bottom:1.3rem}
+.editor-form label{
+  display:block;font-family:var(--sans);font-size:.68rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:.45rem;
+}
+.editor-form input[type=text],.editor-form textarea,.editor-form select{
+  width:100%;font-family:var(--sans);font-size:.95rem;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;
+  padding:.6rem .85rem;transition:border-color .3s;
+}
+.editor-form input:focus,.editor-form textarea:focus,.editor-form select:focus{
+  outline:none;border-color:var(--accent);
+}
+.editor-form textarea{
+  font-family:var(--mono);font-size:.9rem;line-height:1.75;
+  min-height:22rem;resize:vertical;
+}
+.frow-inline{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.frow-inline .full{grid-column:1 / -1}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem}
+.chip{
+  font-family:var(--sans);font-size:.7rem;letter-spacing:.05em;color:var(--accent);
+  background:rgba(47,74,107,.08);border:1px solid rgba(47,74,107,.22);
+  padding:.2rem .6rem;border-radius:99px;cursor:pointer;transition:background .3s;
+}
+.chip:hover{background:rgba(47,74,107,.16)}
+.chip::after{content:"×";margin-left:.45em;opacity:.6}
+.filename-hint{font-family:var(--mono);font-size:.78rem;color:var(--ink-soft);margin-top:.4rem;word-break:break-all}
+
+.actions{display:flex;gap:.8rem;flex-wrap:wrap;margin:1.6rem 0 1rem}
+.btn{
+  font-family:var(--sans);font-size:.8rem;letter-spacing:.14em;
+  background:var(--accent);color:var(--paper);border:none;border-radius:6px;
+  padding:.65rem 1.5rem;cursor:pointer;transition:opacity .3s, background .3s;
+}
+.btn:hover{opacity:.9}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--paper-2);opacity:1}
+.btn-danger{background:transparent;border:1px solid rgba(160,59,42,.5);color:#a03b2a}
+.btn-danger:hover{background:rgba(160,59,42,.08);opacity:1}
+
+.msg{margin:1rem 0;padding:.8rem 1rem;border-radius:6px;font-size:.92rem;display:none}
+.msg.ok{display:block;background:rgba(47,74,107,.08);border:1px solid rgba(47,74,107,.25);color:var(--accent)}
+.msg.err{display:block;background:rgba(160,59,42,.06);border:1px solid rgba(160,59,42,.3);color:#a03b2a}
+.msg a{color:inherit;text-decoration:underline}
+
+.preview-pane{margin-top:2rem;padding-top:2rem;border-top:1px solid var(--line)}
+.preview-pane h3{
+  font-family:var(--sans);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:1.4rem;
+}
+
+/* 页脚写作链接 */
+.write-link{
+  display:inline-block;margin-top:1rem;font-family:var(--sans);
+  font-size:.66rem;letter-spacing:.22em;color:rgba(98,94,83,.55);
+  text-decoration:none;transition:color .3s;
+}
+.write-link:hover{color:var(--ink-soft)}
 
 /* ---------- 页脚 ---------- */
 footer{
