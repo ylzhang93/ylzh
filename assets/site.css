@@ -357,6 +357,43 @@ mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:
   color:var(--ink-soft);margin-bottom:1.4rem;
 }
 
+/* ---------- 写作页：左右分栏编辑 ---------- */
+.editor-split{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:1.2rem;align-items:start;
+}
+.editor-preview{
+  position:sticky;top:6rem;max-height:72vh;overflow-y:auto;
+  background:var(--paper);border:1px solid var(--line);border-radius:8px;
+}
+.preview-head{
+  font-family:var(--sans);font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-soft);padding:.55rem .95rem;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--paper-2);
+}
+#preview-body{padding:1.1rem 1.25rem}
+@media (max-width:900px){
+  .editor-split{grid-template-columns:1fr}
+  .editor-preview{position:static;max-height:none}
+}
+
+/* ---------- 博客列表：站长快捷操作 ---------- */
+.post-list li{display:flex;align-items:center;gap:.9rem}
+.post-list li > a{flex:1}
+.row-actions{display:flex;gap:.4rem;opacity:0;transition:opacity .3s}
+.post-list li:hover .row-actions{opacity:1}
+.row-actions .act{
+  font-family:var(--sans);font-size:.68rem;letter-spacing:.08em;cursor:pointer;
+  padding:.22rem .6rem;border:1px solid var(--line);border-radius:99px;
+  background:transparent;color:var(--ink-soft);text-decoration:none;
+  transition:color .25s, border-color .25s;
+}
+.row-actions .act:hover{color:var(--accent);border-color:var(--accent)}
+.row-actions .act.danger:hover{color:#a03b2a;border-color:rgba(160,59,42,.5)}
+@media (max-width:760px){
+  .row-actions{opacity:1}
+}
+
 /* 页脚写作链接 */
 .write-link{
   display:inline-block;margin-top:1rem;font-family:var(--sans);

@@ -15,6 +15,7 @@
 <script src="assets/i18n.js"></script>
 <script src="assets/config.js"></script>
 <script src="assets/search.js"></script>
+<script src="assets/gh.js"></script>
 <script src="assets/libs.js"></script>
 </head>
 
@@ -80,25 +81,33 @@
 
     <div class="frow">
       <label data-i18n="f_body">正文（Markdown + LaTeX）</label>
-      <div class="toolbar" id="toolbar" role="toolbar" aria-label="编辑工具">
-        <button type="button" data-cmd="bold" data-tb="tb_bold" title="加粗"><b>B</b></button>
-        <button type="button" data-cmd="italic" data-tb="tb_italic" title="斜体"><i>I</i></button>
-        <button type="button" data-cmd="heading" data-tb="tb_heading" title="标题">H</button>
-        <button type="button" data-cmd="list" data-tb="tb_list" title="列表">•</button>
-        <span class="sep"></span>
-        <button type="button" data-cmd="link" data-tb="tb_link" title="链接">🔗</button>
-        <button type="button" data-cmd="image" data-tb="tb_image" title="图片">🖼</button>
-        <button type="button" data-cmd="quote" data-tb="tb_quote" title="引用">❝</button>
-        <button type="button" data-cmd="code" data-tb="tb_code" title="代码块">&lt;/&gt;</button>
-        <span class="sep"></span>
-        <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
-        <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
-        <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
-        <span class="sep"></span>
-        <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
+      <div class="editor-split">
+        <div class="editor-source">
+          <div class="toolbar" id="toolbar" role="toolbar" aria-label="编辑工具">
+            <button type="button" data-cmd="bold" data-tb="tb_bold" title="加粗"><b>B</b></button>
+            <button type="button" data-cmd="italic" data-tb="tb_italic" title="斜体"><i>I</i></button>
+            <button type="button" data-cmd="heading" data-tb="tb_heading" title="标题">H</button>
+            <button type="button" data-cmd="list" data-tb="tb_list" title="列表">•</button>
+            <span class="sep"></span>
+            <button type="button" data-cmd="link" data-tb="tb_link" title="链接">🔗</button>
+            <button type="button" data-cmd="image" data-tb="tb_image" title="图片">🖼</button>
+            <button type="button" data-cmd="quote" data-tb="tb_quote" title="引用">❝</button>
+            <button type="button" data-cmd="code" data-tb="tb_code" title="代码块">&lt;/&gt;</button>
+            <span class="sep"></span>
+            <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
+            <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
+            <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
+            <span class="sep"></span>
+            <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
+          </div>
+          <div id="symbol-panel" class="symbol-panel" hidden></div>
+          <textarea id="f-body" spellcheck="false"></textarea>
+        </div>
+        <div class="editor-preview">
+          <div class="preview-head" data-i18n="btn_preview">预览</div>
+          <article id="preview-body" class="post"></article>
+        </div>
       </div>
-      <div id="symbol-panel" class="symbol-panel" hidden></div>
-      <textarea id="f-body" spellcheck="false"></textarea>
     </div>
 
     <div class="frow">
@@ -109,17 +118,11 @@
     </div>
 
     <div class="actions">
-      <button id="btn-preview" class="btn btn-ghost" type="button" data-i18n="btn_preview">预览</button>
       <button id="btn-save" class="btn" type="button" data-i18n="btn_save">保存发布</button>
       <button id="btn-delete" class="btn btn-danger" type="button" data-i18n="btn_delete" hidden>删除文章</button>
     </div>
 
     <div id="msg" class="msg"></div>
-
-    <div id="preview" class="preview-pane" hidden>
-      <h3 data-i18n="btn_preview">预览</h3>
-      <article id="preview-body" class="post"></article>
-    </div>
   </div>
 </main>
 
@@ -334,31 +337,26 @@
     }
   });
 
-  /* ---------- 正文实时预览（防抖） ---------- */
+  /* ---------- 正文实时预览（防抖，常驻右侧栏） ---------- */
   var previewTimer = null;
   $('f-body').addEventListener('input', function(){
     clearTimeout(previewTimer);
     previewTimer = setTimeout(renderPreview, 600);
   });
-  $('btn-preview').addEventListener('click', function(){
-    var p = $('preview');
-    p.hidden = !p.hidden;
-    if (!p.hidden) renderPreview();
-  });
   function renderPreview(){
     var body = $('f-body').value;
-    if (!body) return;
+    var pv = $('preview-body');
+    if (!body.trim()){ pv.innerHTML = ''; return; }
     window.LIBS.load(function(ok){
       if (!ok){ showMsg(I18N.t('load_fail'), 'err'); return; }
-      var html = window.LIBS.renderMarkdown(body);
-      $('preview-body').innerHTML = html;
-      window.LIBS.renderMathIn($('preview-body'));
+      pv.innerHTML = window.LIBS.renderMarkdown(body);
+      window.LIBS.renderMathIn(pv);
     });
   }
 
   /* ---------- 已有文章列表 ---------- */
   var allPosts = [];
-  function loadExistingList(){
+  function loadExistingList(done){
     fetch('posts/index.json')
       .then(function(r){ return r.ok ? r.json() : []; })
       .catch(function(){ return []; })
@@ -378,6 +376,7 @@
           o.value = t.tag;
           d.appendChild(o);
         });
+        if (done) done();
       });
   }
 
@@ -393,7 +392,7 @@
     tags = [];
     renderChips();
     $('btn-delete').hidden = true;
-    $('preview').hidden = true;
+    $('preview-body').innerHTML = '';
     updateFilename();
   }
 
@@ -417,30 +416,16 @@
       $('f-body').value = md;
       $('btn-delete').hidden = false;
       updateFilename();
-      $('preview').hidden = true;
+      renderPreview();
       window.scrollTo(0, 0);
     });
   });
 
-  /* ---------- GitHub API ---------- */
-  function api(method, path, body){
-    return fetch('https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/' + path, {
-      method: method,
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      body: body ? JSON.stringify(body) : undefined
-    }).then(function(r){
-      return r.json().then(function(j){ return { ok: r.ok, j: j }; });
+  /* ---------- 工具 ---------- */
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
-  }
-  function decodeB64(s){
-    return new TextDecoder().decode(Uint8Array.from(atob(s), function(c){ return c.charCodeAt(0); }));
-  }
-  function encodeB64(s){
-    return btoa(unescape(encodeURIComponent(s)));
   }
   function today(){ return new Date().toISOString().slice(0, 10); }
   function msgForCommit(what){
@@ -448,7 +433,7 @@
            (editing ? editing.file : 'post');
   }
 
-  /* ---------- 保存发布 ---------- */
+  /* ---------- 保存发布（GitHub Contents API，见 assets/gh.js） ---------- */
   $('btn-save').addEventListener('click', save);
   function save(){
     token = $('f-token').value.trim();
@@ -470,16 +455,16 @@
 
     (function saveLoop(baseFile, n){
       var path = n > 1 ? baseFile.replace(/\.md$/, '-' + n + '.md') : baseFile;
-      api('GET', path).then(function(res){
+      window.GH.api('GET', path, cfg, token).then(function(res){
         if (!editing && res.ok){
           saveLoop(baseFile, n + 1);            /* 新文章重名 → 追加序号 */
           return;
         }
         var sha = res.ok ? res.j.sha : null;
         var mdBody = body.replace(/\n*$/, '') + '\n';
-        api('PUT', path, {
+        window.GH.api('PUT', path, cfg, token, {
           message: msgForCommit('add'),
-          content: encodeB64(mdBody),
+          content: window.GH.encodeB64(mdBody),
           sha: sha || undefined,
           branch: cfg.branch
         }).then(function(putRes){
@@ -502,24 +487,20 @@
   }
 
   function updateIndex(path, done){
-    api('GET', 'posts/index.json').then(function(res){
-      var posts = res.ok ? JSON.parse(decodeB64(res.j.content)) : [];
+    window.GH.api('GET', 'posts/index.json', cfg, token).then(function(res){
+      var posts = res.ok ? JSON.parse(window.GH.decodeB64(res.j.content)) : [];
       var entry = { file: path, title: $('f-title').value.trim(), date: (editing ? editing.date : today()) };
       var te = $('f-title-en').value.trim();
       if (te) entry.title_en = te;
       entry.tags = tags.slice();
 
-      var found = false;
-      posts = posts.filter(function(p){
-        if (p.file === path){ found = true; return false; }
-        return true;
-      });
+      posts = posts.filter(function(p){ return p.file !== path; });
       posts.push(entry);
       posts.sort(function(a, b){ return (a.date < b.date) ? 1 : (a.date > b.date ? -1 : 0); });
 
-      api('PUT', 'posts/index.json', {
+      window.GH.api('PUT', 'posts/index.json', cfg, token, {
         message: 'update posts/index.json',
-        content: encodeB64(JSON.stringify(posts, null, 2) + '\n'),
+        content: window.GH.encodeB64(JSON.stringify(posts, null, 2) + '\n'),
         sha: res.ok ? res.j.sha : null,
         branch: cfg.branch
       }).then(function(r){
@@ -540,36 +521,14 @@
     if (!token){ showMsg(I18N.t('need_token'), 'err'); return; }
     if (!window.confirm(I18N.t('del_confirm'))) return;
 
-    api('GET', editing.file).then(function(res){
-      if (!res.ok){
-        showMsg(I18N.t('save_fail') + ' ' + escapeHtml(res.j.message || ''), 'err');
+    window.GH.deletePost(cfg, token, editing.file, function(ok, msg){
+      if (!ok){
+        showMsg(I18N.t('save_fail') + ' ' + escapeHtml(msg || ''), 'err');
         return;
       }
-      api('DELETE', editing.file, {
-        message: msgForCommit('del'),
-        sha: res.j.sha,
-        branch: cfg.branch
-      }).then(function(delRes){
-        if (!delRes.ok){
-          showMsg(I18N.t('save_fail') + ' ' + escapeHtml(delRes.j.message || ''), 'err');
-          return;
-        }
-        api('GET', 'posts/index.json').then(function(idx){
-          var posts = idx.ok ? JSON.parse(decodeB64(idx.j.content)) : [];
-          posts = posts.filter(function(p){ return p.file !== editing.file; });
-          api('PUT', 'posts/index.json', {
-            message: 'update posts/index.json',
-            content: encodeB64(JSON.stringify(posts, null, 2) + '\n'),
-            sha: idx.ok ? idx.j.sha : null,
-            branch: cfg.branch
-          }).then(function(){
-            showMsg(I18N.t('del_ok'), 'ok');
-            $('f-existing').value = '';
-            $('f-existing').dispatchEvent(new Event('change'));
-            loadExistingList();
-          });
-        });
-      });
+      showMsg(I18N.t('del_ok'), 'ok');
+      resetForm();
+      loadExistingList();
     });
   });
 
@@ -578,14 +537,29 @@
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
     if (token) $('f-token').value = token;
     buildSymbolPanel();
-    loadExistingList();
     updateFilename();
     var sp = new URLSearchParams(location.search);
     if (sp.get('new') === '1'){
       resetForm();              /* 博客页 ＋ 按钮：直接开始新文章 */
       $('f-title').focus();
     } else {
-      $('f-existing').dispatchEvent(new Event('change'));
+      var target = sp.get('p');
+      if (target){
+        /* 博客列表"编辑"按钮：直接载入指定文章 */
+        loadExistingList(function(){
+          var sel = $('f-existing');
+          for (var i = 0; i < sel.options.length; i++){
+            if (sel.options[i].value === target){
+              sel.value = target;
+              sel.dispatchEvent(new Event('change'));
+              return;
+            }
+          }
+        });
+      } else {
+        loadExistingList();
+        $('f-existing').dispatchEvent(new Event('change'));
+      }
     }
   }
 })();

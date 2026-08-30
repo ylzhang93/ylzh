@@ -13,7 +13,9 @@
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/site.css">
 <script src="assets/i18n.js"></script>
+<script src="assets/config.js"></script>
 <script src="assets/search.js"></script>
+<script src="assets/gh.js"></script>
 </head>
 
 <body>
@@ -65,6 +67,27 @@
   var mdCache = {};                    /* file -> 全文（首次搜索时按需加载） */
   var state = { q: '', tags: [] };     /* 当前搜索词 / 选中的标签 */
   var loading = false;
+  var cfg = window.SITE_CONFIG || {};
+
+  /* 站长模式：浏览器里保存过令牌（只有你能看到 编辑/删除） */
+  function isOwner(){
+    try { return !!localStorage.getItem('zyl-token'); } catch (e) { return false; }
+  }
+
+  /* 删除文章（需要你的令牌；assets/gh.js 封装 GitHub API） */
+  function delPost(p){
+    var token = '';
+    try { token = localStorage.getItem('zyl-token') || ''; } catch (e) {}
+    if (!token){ window.alert(I18N.t('need_token')); return; }
+    if (!window.confirm(I18N.t('del_confirm') + '\n' + p.title)) return;
+    window.GH.deletePost(cfg, token, p.file, function(ok, msg){
+      if (!ok){ window.alert(I18N.t('save_fail') + ' ' + msg); return; }
+      delete mdCache[p.file];
+      posts = posts.filter(function(x){ return x.file !== p.file; });
+      renderTagbar();
+      renderList();
+    });
+  }
 
   var list = document.getElementById('post-list');
   var empty = document.getElementById('empty');
@@ -159,6 +182,30 @@
       }
 
       li.appendChild(a);
+
+      /* 站长快捷操作：编辑 / 删除（悬停出现） */
+      if (isOwner()){
+        var ac = document.createElement('span');
+        ac.className = 'row-actions';
+        var ed = document.createElement('a');
+        ed.className = 'act';
+        ed.href = 'write.html?p=' + encodeURIComponent(p.file);
+        ed.textContent = I18N.t('row_edit');
+        ed.addEventListener('click', function(e){ e.stopPropagation(); });
+        var dl = document.createElement('button');
+        dl.type = 'button';
+        dl.className = 'act danger';
+        dl.textContent = I18N.t('row_delete');
+        dl.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          delPost(p);
+        });
+        ac.appendChild(ed);
+        ac.appendChild(dl);
+        li.appendChild(ac);
+      }
+
       list.appendChild(li);
     });
   }

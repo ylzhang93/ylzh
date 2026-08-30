@@ -94,7 +94,9 @@
       tb_math: '行内公式',
       tb_mathblock: '块级公式',
       tb_aopsmath: 'AoPS 公式',
-      tb_symbols: '符号与表情'
+      tb_symbols: '符号与表情',
+      row_edit: '编辑',
+      row_delete: '删除'
     },
 
     en: {
@@ -179,7 +181,9 @@
       tb_math: 'Inline math',
       tb_mathblock: 'Block math',
       tb_aopsmath: 'AoPS math',
-      tb_symbols: 'Symbols & emoji'
+      tb_symbols: 'Symbols & emoji',
+      row_edit: 'Edit',
+      row_delete: 'Delete'
     }
   };
 
