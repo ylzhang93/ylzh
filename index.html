@@ -6,17 +6,62 @@
 <meta name="color-scheme" content="light">
 <title>zyl · Mathematics</title>
 <meta name="description" content="zyl — PhD student in mathematics. Algebraic geometry, moduli spaces, number theory. 数学博士生个人主页。">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23f7f5f0'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='42' text-anchor='middle' fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
-<!-- KaTeX -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"
-  onload="renderMathInElement(document.body,{delimiters:[{left:'\\[',right:'\\]',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});"></script>
+<!-- KaTeX：多 CDN 自动回退（jsdelivr → npmmirror → unpkg） -->
+<script>
+(function(){
+  'use strict';
+  var CDNS = [
+    'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist',
+    'https://registry.npmmirror.com/katex/0.16.11/files/dist',
+    'https://unpkg.com/katex@0.16.11/dist'
+  ];
+  function loadScript(src, done){
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = function(){ done(true); };
+    s.onerror = function(){ done(false); };
+    document.head.appendChild(s);
+  }
+  function loadCss(src){
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = src;
+    document.head.appendChild(l);
+  }
+  (function tryNext(i){
+    if (i >= CDNS.length) return;   /* 全部失败：公式以原始文本兜底显示 */
+    var base = CDNS[i];
+    loadScript(base + '/katex.min.js', function(ok){
+      if (!ok) return tryNext(i + 1);
+      loadCss(base + '/katex.min.css');
+      loadScript(base + '/contrib/auto-render.min.js', function(ok2){
+        if (!ok2) return tryNext(i + 1);
+        var render = function(){
+          renderMathInElement(document.body, {
+            delimiters: [
+              {left: '\\[', right: '\\]', display: true},
+              {left: '\\(', right: '\\)', display: false}
+            ],
+            throwOnError: false
+          });
+        };
+        /* 等 DOM 解析完成再渲染公式，避免竞态 */
+        if (document.readyState === 'loading'){
+          document.addEventListener('DOMContentLoaded', render);
+        } else {
+          render();
+        }
+      });
+    });
+  })(0);
+})();
+</script>
 
 <style>
   :root{
@@ -50,6 +95,7 @@
     position:fixed;top:0;left:0;right:0;z-index:50;
     display:flex;align-items:center;justify-content:space-between;
     padding:1.15rem clamp(1.2rem,5vw,3rem);
+    background:rgba(247,245,240,.85);                     /* 旧浏览器兜底 */
     background:color-mix(in srgb, var(--paper) 80%, transparent);
     -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
     border-bottom:1px solid transparent;transition:border-color .35s;
@@ -208,8 +254,8 @@
   <canvas id="knot" aria-hidden="true"></canvas>
   <div class="hero-inner">
     <p class="overline">数学博士研究生 · PhD Student in Mathematics</p>
-    <!-- TODO: 把 zyl 替换为你的名字（中文名放在 <span class="cn"> 里） -->
-    <h1 class="name">zyl<span class="cn">张·Z</span></h1>
+    <!-- TODO: 把 zyl 替换为你的名字；想要中文名的话，在 zyl 后面加 <span class="cn">中文名</span> -->
+    <h1 class="name">zyl</h1>
     <div class="formula-hero">\[ e^{i\pi} + 1 = 0 \]</div>
   </div>
   <div class="hint" aria-hidden="true">scroll</div>
