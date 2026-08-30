@@ -55,6 +55,14 @@
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  /* 页脚写作入口仅站长可见 */
+  try {
+    if (!localStorage.getItem('zyl-token')){
+      var wl = document.querySelector('.write-link');
+      if (wl) wl.style.display = 'none';
+    }
+  } catch (e) {}
+
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];

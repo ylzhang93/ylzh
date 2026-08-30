@@ -75,6 +75,13 @@
     try { return !!localStorage.getItem('zyl-token'); } catch (e) { return false; }
   }
 
+  /* 写作入口仅站长可见：＋ 写文章按钮、页脚写作链接 */
+  (function(){
+    if (isOwner()) return;
+    var els = document.querySelectorAll('.plus-btn, .write-link');
+    for (var i = 0; i < els.length; i++) els[i].style.display = 'none';
+  })();
+
   /* 删除文章（需要你的令牌；assets/gh.js 封装 GitHub API） */
   function delPost(p){
     var token = '';

@@ -86,6 +86,8 @@ git push
 
 在浏览器里直接写博客，发布后 GitHub Pages 自动更新。博客页头部有 **「＋ 写日志」** 按钮（QQ 空间式），点击直达新文章编辑。
 
+> 写作入口（「＋」按钮、页脚「写作」链接）**只有站长可见**：浏览器里保存过令牌才会显示，普通网友看不到。
+
 ### 用令牌发一篇 blog（完整流程）
 
 1. **创建令牌**（只做一次）：GitHub → Settings → Developer settings → Personal access tokens → Generate new token → 勾选 `repo`（经典令牌）或 fine-grained 令牌勾选 `Contents: Read and write` → 生成后**复制**（只显示一次）

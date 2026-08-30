@@ -149,6 +149,14 @@
   /* ---------- 年份 ---------- */
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  /* ---------- 页脚写作入口仅站长可见 ---------- */
+  try {
+    if (!localStorage.getItem('zyl-token')){
+      var wl = document.querySelector('.write-link');
+      if (wl) wl.style.display = 'none';
+    }
+  } catch (e) {}
+
   /* ---------- 页面标题随语言切换 ---------- */
   window.onLangChange = function(){
     document.title = I18N.t('page_title');
