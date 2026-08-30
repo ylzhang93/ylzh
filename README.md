@@ -8,6 +8,7 @@
 - KaTeX 渲染数学公式
 - Canvas 绘制缓慢旋转的三叶扭结（trefoil knot）动画
 - 滚动渐显、导航高亮、响应式，兼容 `prefers-reduced-motion`
+- 数学博客：Markdown 写作，`$...$` 渲染公式，像写 LaTeX 一样简单
 
 ## 本地预览
 
@@ -15,6 +16,56 @@
 python -m http.server 8080
 # 打开 http://localhost:8080
 ```
+
+## 写博客
+
+### 快速开始（一条命令）
+
+```bash
+python new_post.py "文章标题" --tags "代数几何, 笔记"
+```
+
+脚本会：
+1. 在 `posts/` 下创建 `2026-08-30-文章标题.md` 模板文件
+2. 把文章信息写入 `posts/index.json`（文章列表）
+
+然后编辑这个 `.md` 文件，写完推送到 GitHub 即上线：
+
+```bash
+git add .
+git commit -m "new post: 文章标题"
+git push
+```
+
+### 写作语法
+
+文章就是 Markdown 文件，数学公式用 LaTeX 语法：
+
+| 用法 | 写法 |
+| --- | --- |
+| 行内公式 | `$e^{i\pi} + 1 = 0$` |
+| 块级公式 | `$$ \int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi} $$` |
+| 行内（LaTeX 风格） | `\(x_i\)` |
+| 块级（LaTeX 风格） | `\[ \dim \mathcal{M}_g = 3g-3 \]` |
+| AoPS 风格 | `[math]a^2+b^2=c^2[/math]`，多行 `[math]...[/math]` 自动按块级 |
+| 标题 | `# 一级`、`## 二级`、`### 三级` |
+| 列表 / 引用 / 代码 | 标准 Markdown：`-`、`>`、```` ``` ```` |
+| 表格 | 标准 GFM 表格 |
+
+注意：
+- 普通文本里的货币符号请写成 `\$`（反斜杠转义），否则会被当作公式起点
+- 公式中的 `&`（如 `aligned` 环境）无需特殊处理，会自动转义还原
+- 想新建文章但标题是中文时，文件名会退化为 `post-日期`，建议用 `--slug` 指定英文名
+
+### 手动新建（不用脚本）
+
+在 `posts/` 下新建 `2026-08-30-my-title.md`，再往 `posts/index.json` 里加一条：
+
+```json
+{"file": "posts/2026-08-30-my-title.md", "title": "我的标题", "date": "2026-08-30", "tags": ["数论"]}
+```
+
+`posts/2026-08-30-euler-identity.md` 是一篇示例文章（演示各种语法），确认后可以删除。
 
 ## 发布到 GitHub Pages
 
@@ -57,7 +108,12 @@ git push -u origin main
 ## 目录结构
 
 ```
-index.html          主页面（所有样式与脚本内联）
+index.html          主页面
+blog.html           博客列表页
+post.html           文章阅读页（Markdown + KaTeX 渲染）
+assets/site.css     共享样式
+posts/              博客文章（.md）与清单（index.json）
+new_post.py         发帖脚本（python new_post.py "标题"）
 source/img/         照片
 legacy/             旧版网站归档（仅本地保留，不推送，确认后可删除）
 ```

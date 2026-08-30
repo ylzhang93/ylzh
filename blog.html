@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>博客 · Blog — zyl</title>
+<meta name="description" content="zyl 的数学博客：代数几何、模空间、数论的笔记与思考。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+
+<body>
+
+<nav aria-label="主导航">
+  <a class="brand" href="index.html">zyl</a>
+  <div class="nav-links">
+    <a href="index.html#about">关于<span class="en">About</span></a>
+    <a href="index.html#research">研究<span class="en">Research</span></a>
+    <a href="blog.html" class="active">博客<span class="en">Blog</span></a>
+    <a href="index.html#contact">联系<span class="en">Contact</span></a>
+  </div>
+</nav>
+
+<header class="page-head">
+  <h1>博客 · Blog</h1>
+  <p class="sub">用 Markdown 与 \(\LaTeX\) 记录数学的思考。</p>
+</header>
+
+<main>
+  <ol id="post-list" class="post-list"></ol>
+  <p id="empty" class="empty" hidden>
+    还没有文章——写第一篇吧：<code>python new_post.py "文章标题"</code>
+  </p>
+</main>
+
+<footer>
+  <p class="motto">For life, for math, for entertainment.</p>
+  <p class="copy">© <span id="year">2026</span> zyl · Made with paper &amp; ink</p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  fetch('posts/index.json')
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .catch(function(){ return []; })
+    .then(function(posts){
+      if (!Array.isArray(posts) || !posts.length){
+        document.getElementById('empty').hidden = false;
+        return;
+      }
+      var list = document.getElementById('post-list');
+      posts.forEach(function(p){
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.href = 'post.html?p=' + encodeURIComponent(p.file);
+        var d = document.createElement('span');
+        d.className = 'date';
+        d.textContent = p.date;
+        var t = document.createElement('span');
+        t.className = 'title';
+        t.textContent = p.title;
+        a.appendChild(d);
+        a.appendChild(t);
+        if (Array.isArray(p.tags) && p.tags.length){
+          var tg = document.createElement('span');
+          tg.className = 'tags';
+          p.tags.forEach(function(x){
+            var s = document.createElement('span');
+            s.className = 'tag';
+            s.textContent = x;
+            tg.appendChild(s);
+          });
+          a.appendChild(tg);
+        }
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+    });
+})();
+</script>
+</body>
+</html>

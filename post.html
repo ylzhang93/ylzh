@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<title>文章 — zyl</title>
+<meta name="description" content="zyl 的数学博客文章。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%23f7f5f0'/%3E%3Ctext%20x='32'%20y='45'%20font-family='Georgia,serif'%20font-size='42'%20text-anchor='middle'%20fill='%2323211c'%3Ez%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+
+<body>
+
+<nav aria-label="主导航">
+  <a class="brand" href="index.html">zyl</a>
+  <div class="nav-links">
+    <a href="index.html#about">关于<span class="en">About</span></a>
+    <a href="index.html#research">研究<span class="en">Research</span></a>
+    <a href="blog.html" class="active">博客<span class="en">Blog</span></a>
+    <a href="index.html#contact">联系<span class="en">Contact</span></a>
+  </div>
+</nav>
+
+<main class="post-wrap">
+  <a class="back" href="blog.html">← 返回博客 · Back to Blog</a>
+  <article id="post" class="post">
+    <p class="empty">正在加载… Loading…</p>
+  </article>
+  <nav id="post-nav" class="post-nav" aria-label="上一篇下一篇"></nav>
+</main>
+
+<footer>
+  <p class="motto">For life, for math, for entertainment.</p>
+  <p class="copy">© <span id="year">2026</span> zyl · Made with paper &amp; ink</p>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ========== 多 CDN 加载（jsdelivr → npmmirror → unpkg） ========== */
+  function loadScript(urls, done){
+    var i = 0;
+    (function next(){
+      if (i >= urls.length) return done(false);
+      var s = document.createElement('script');
+      s.src = urls[i++];
+      s.onload = function(){ done(true); };
+      s.onerror = next;
+      document.head.appendChild(s);
+    })();
+  }
+  function loadCss(src){
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = src;
+    document.head.appendChild(l);
+  }
+
+  var JSD   = function(path){ return 'https://cdn.jsdelivr.net/npm/' + path; };
+  var NPMM  = function(path){ return 'https://registry.npmmirror.com/' + path; };
+  var UNPKG = function(path){ return 'https://unpkg.com/' + path; };
+  function chain(path){
+    return [JSD(path), NPMM(path), UNPKG(path)];
+  }
+
+  /* 库加载顺序：marked → dompurify → katex + auto-render → 渲染文章 */
+  loadScript(chain('marked@5.1.2/marked.min.js'), function(ok){
+    if (!ok) return fail();
+    loadScript(chain('dompurify@3.1.6/dist/purify.min.js'), function(ok2){
+      if (!ok2) return fail();
+      loadScript(chain('katex@0.16.11/dist/katex.min.js'), function(ok3){
+        if (!ok3) return fail();
+        loadCss('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+        loadScript(chain('katex@0.16.11/dist/contrib/auto-render.min.js'), function(ok4){
+          if (!ok4) return fail();
+          renderPost();
+        });
+      });
+    });
+  });
+
+  function fail(){
+    document.getElementById('post').innerHTML =
+      '<p class="empty">博客组件加载失败，请检查网络后重试。<br>Failed to load. Check your connection.</p>';
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function renderPost(){
+    var params = new URLSearchParams(location.search);
+    var file = params.get('p');
+    var article = document.getElementById('post');
+
+    if (!file){
+      article.innerHTML = '<p class="empty">未指定文章。Missing article.</p>';
+      return;
+    }
+
+    Promise.all([
+      /* 文章清单：标题 / 日期 / 标签 / 上一篇下一篇 */
+      fetch('posts/index.json')
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .catch(function(){ return []; }),
+      /* 文章正文 */
+      fetch(file).then(function(r){
+        if (!r.ok) throw new Error('not found');
+        return r.text();
+      })
+    ]).then(function(res){
+      var posts = Array.isArray(res[0]) ? res[0] : [];
+      var md = res[1];
+      var entry = null;
+      posts.forEach(function(x){ if (x && x.file === file) entry = x; });
+
+      /* 数学保护：围栏代码块原样保留，其余部分先转换 [math] 标签，
+         再把数学片段换成占位符，避免 Markdown 引擎误解析公式里的 _ * 等字符 */
+      var mathSpans = [];
+      function protectSeg(seg){
+        seg = seg.replace(/\[math\]\s*([\s\S]*?)\s*\[\/math\]/g, function(_, inner){
+          return /\n/.test(inner)
+            ? '\n$$\n' + inner.trim() + '\n$$\n'
+            : '$' + inner.trim() + '$';
+        });
+        function p(re){
+          seg = seg.replace(re, function(m){
+            mathSpans.push(m);
+            return '\u27E6' + (mathSpans.length - 1) + '\u27E7';
+          });
+        }
+        p(/\$\$[\s\S]+?\$\$/g);       /* 块级 $$...$$ */
+        p(/\$[^$\n]+?\$/g);           /* 行内 $...$ */
+        p(/\\\[[\s\S]+?\\\]/g);       /* \[...\] */
+        p(/\\\([\s\S]+?\\\)/g);       /* \(...\) */
+        return seg;
+      }
+      md = md.split(/(```[^\n]*\n[\s\S]*?```)/g)
+            .map(function(seg, i){ return i % 2 === 1 ? seg : protectSeg(seg); })
+            .join('');
+
+      var html = window.marked.parse ? window.marked.parse(md) : window.marked(md);
+      /* 还原公式并做 HTML 转义：& < > 由浏览器解码，KaTeX 从文本节点读回原字符 */
+      html = html.replace(/\u27E6(\d+)\u27E7/g, function(_, i){
+        return escapeHtml(mathSpans[+i]);
+      });
+      var clean = window.DOMPurify.sanitize(html);
+
+      var title = entry ? entry.title : ((md.match(/^#\s+(.+)$/m) || [,'无题'])[1]).trim();
+      var date  = entry ? entry.date : ((file.match(/^posts\/(\d{4}-\d{2}-\d{2})/) || [,''])[1]);
+      var tags  = entry && Array.isArray(entry.tags) ? entry.tags : [];
+
+      document.title = title + ' · zyl';
+
+      var meta = '<header class="post-meta"><span>' + escapeHtml(date) + '</span>' +
+        tags.map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join('') +
+        '</header>';
+
+      article.innerHTML = '<h1>' + escapeHtml(title) + '</h1>' + meta + clean;
+
+      /* 上一篇 / 下一篇（清单按日期倒序） */
+      var idx = posts.indexOf(entry);
+      var navEl = document.getElementById('post-nav');
+      if (idx > -1){
+        var next = posts[idx - 1];   /* 更新的 */
+        var prev = posts[idx + 1];   /* 更旧的 */
+        var left = prev
+          ? '<a href="post.html?p=' + encodeURIComponent(prev.file) + '">' +
+              '<span class="dir">← 上一篇 Prev</span>' + escapeHtml(prev.title) + '</a>'
+          : '<span></span>';
+        var right = next
+          ? '<a class="next" href="post.html?p=' + encodeURIComponent(next.file) + '">' +
+              '<span class="dir">下一篇 Next →</span>' + escapeHtml(next.title) + '</a>'
+          : '<span></span>';
+        navEl.innerHTML = left + right;
+      }
+
+      /* KaTeX 渲染公式 */
+      if (window.renderMathInElement){
+        renderMathInElement(article, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      }
+      window.scrollTo(0, 0);
+    }).catch(function(){
+      article.innerHTML =
+        '<p class="empty">文章不存在或尚未发布：' + escapeHtml(file) + '</p>';
+    });
+  }
+})();
+</script>
+</body>
+</html>
