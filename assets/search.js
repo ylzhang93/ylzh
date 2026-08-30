@@ -46,6 +46,18 @@
       return String(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     },
 
+    /* 日期本地化：2026-08-30 → 中文「2026年8月30日」/ 英文「Aug 30, 2026」 */
+    formatDate: function(s, lang){
+      var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || '').trim());
+      if (!m) return String(s || '');
+      var y = m[1], mo = +m[2], d = +m[3];
+      if (lang === 'en'){
+        var names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return names[mo - 1] + ' ' + d + ', ' + y;
+      }
+      return y + '年' + mo + '月' + d + '日';
+    },
+
     /* 统计全部标签及出现次数（按次数降序，再按名称） */
     distinctTags: function(posts){
       var m = {};

@@ -155,19 +155,45 @@ h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
 }
 .page-head h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:500;letter-spacing:.02em}
 .page-head .sub{margin-top:.9rem;color:var(--ink-soft);font-style:italic}
+.page-head .count{
+  margin-top:.7rem;font-family:var(--sans);font-size:.66rem;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--ink-soft);
+}
 
-/* ---------- 博客：列表 ---------- */
+/* ---------- 博客：列表（数学笔记目录风格） ---------- */
 .post-list{list-style:none}
 .post-list li{border-bottom:1px solid var(--line)}
+.post-list li:hover{background:rgba(35,33,28,.035)}
+.post-list .year{
+  display:flex;align-items:center;gap:1rem;border-bottom:none;
+  padding:2.6rem .2rem .9rem;
+  font-family:var(--sans);font-size:.78rem;font-weight:500;
+  letter-spacing:.32em;color:var(--ink-soft);
+}
+.post-list .year:first-child{padding-top:.4rem}
+.post-list .year::after{content:"";flex:1;height:1px;background:var(--line)}
 .post-list a{
-  display:flex;align-items:baseline;gap:1.4rem;padding:1.2rem .2rem;
+  display:flex;align-items:baseline;gap:1.3rem;padding:1.25rem .2rem;
   text-decoration:none;color:var(--ink);
   transition:color .3s, padding-left .35s cubic-bezier(.2,.7,.2,1);
 }
 .post-list a:hover{color:var(--accent);padding-left:.7rem}
-.post-list .date{font-family:var(--sans);font-size:.72rem;letter-spacing:.12em;color:var(--ink-soft);white-space:nowrap}
-.post-list .title{font-size:1.18rem}
-.post-list .tags{margin-left:auto;display:flex;gap:.4rem;flex-wrap:wrap}
+.post-list .no{
+  font-family:var(--serif);font-style:italic;font-size:.95rem;
+  color:var(--ink-soft);min-width:2.6rem;transition:color .3s;
+}
+.post-list li:hover .no{color:var(--accent)}
+.post-list .title{font-size:1.18rem;flex:1}
+.badge-latest{
+  display:inline-block;vertical-align:middle;margin-left:.7rem;
+  font-family:var(--sans);font-size:.58rem;letter-spacing:.14em;font-style:normal;
+  color:var(--paper);background:var(--accent);padding:.18rem .55rem;border-radius:99px;
+}
+.post-list .date{
+  font-family:var(--sans);font-size:.72rem;letter-spacing:.12em;
+  color:var(--ink-soft);white-space:nowrap;
+}
+.post-list .tags{display:flex;gap:.4rem;flex-wrap:wrap}
 .tag{
   font-family:var(--sans);font-size:.62rem;letter-spacing:.1em;color:var(--accent);
   background:rgba(47,74,107,.08);border:1px solid rgba(47,74,107,.22);
@@ -438,8 +464,10 @@ footer .copy{font-family:var(--sans);font-size:.7rem;letter-spacing:.18em}
   section{padding:4rem 0 1rem}
   .page-head{padding-top:8rem}
   .post-list a{flex-wrap:wrap;gap:.35rem 1rem;padding:1.05rem .2rem}
-  .post-list .date{width:100%}
+  .post-list .date{flex-basis:100%;margin-left:0}
+  .post-list .no{min-width:auto}
   .post-list .tags{margin-left:0}
+  .post-list .year{padding-top:2rem}
   .post-nav a{max-width:100%}
   .post-nav .next{text-align:left}
 }

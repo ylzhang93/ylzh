@@ -96,7 +96,9 @@
       tb_aopsmath: 'AoPS 公式',
       tb_symbols: '符号与表情',
       row_edit: '编辑',
-      row_delete: '删除'
+      row_delete: '删除',
+      badge_latest: '最新',
+      post_count: '共 {n} 篇文章'
     },
 
     en: {
@@ -183,7 +185,9 @@
       tb_aopsmath: 'AoPS math',
       tb_symbols: 'Symbols & emoji',
       row_edit: 'Edit',
-      row_delete: 'Delete'
+      row_delete: 'Delete',
+      badge_latest: 'Latest',
+      post_count: '{n} posts'
     }
   };
 

@@ -34,6 +34,7 @@
 <header class="page-head">
   <h1 data-i18n="blog_title">博客</h1>
   <p class="sub" data-i18n="blog_sub">用 Markdown 与 LaTeX 语法，记录数学的思考。</p>
+  <p class="count" id="post-count"></p>
   <a class="plus-btn" href="write.html?new=1">＋ <span data-i18n="plus_new">写日志</span></a>
 </header>
 
@@ -146,68 +147,112 @@
     }
     noresults.hidden = true;
 
+    var filtered = !!(state.q || state.tags.length);
+
+    if (filtered){
+      /* 搜索 / 筛选时：平铺列表 */
+      shown.forEach(function(p, i){ appendRow(p, i + 1, false); });
+      return;
+    }
+
+    /* 按年份分组（倒序），像数学笔记的目录 */
+    var years = [];
     shown.forEach(function(p){
-      var li = document.createElement('li');
-      var a = document.createElement('a');
-      a.href = 'post.html?p=' + encodeURIComponent(p.file);
-
-      var d = document.createElement('span');
-      d.className = 'date';
-      d.textContent = p.date;
-      a.appendChild(d);
-
-      var t = document.createElement('span');
-      t.className = 'title';
-      t.innerHTML = window.Search.highlight(titleFor(p), state.q);
-      a.appendChild(t);
-
-      if (Array.isArray(p.tags) && p.tags.length){
-        var tg = document.createElement('span');
-        tg.className = 'tags';
-        p.tags.forEach(function(x){
-          var s = document.createElement('span');
-          s.className = 'tag';
-          s.textContent = x;
-          tg.appendChild(s);
-        });
-        a.appendChild(tg);
-      }
-
-      if (matchedByContent(p)){
-        var sn = document.createElement('span');
-        sn.className = 'snippet';
-        sn.innerHTML = window.Search.highlight(
-          window.Search.snippet(mdCache[p.file], state.q), state.q);
-        a.appendChild(sn);
-      }
-
-      li.appendChild(a);
-
-      /* 站长快捷操作：编辑 / 删除（悬停出现） */
-      if (isOwner()){
-        var ac = document.createElement('span');
-        ac.className = 'row-actions';
-        var ed = document.createElement('a');
-        ed.className = 'act';
-        ed.href = 'write.html?p=' + encodeURIComponent(p.file);
-        ed.textContent = I18N.t('row_edit');
-        ed.addEventListener('click', function(e){ e.stopPropagation(); });
-        var dl = document.createElement('button');
-        dl.type = 'button';
-        dl.className = 'act danger';
-        dl.textContent = I18N.t('row_delete');
-        dl.addEventListener('click', function(e){
-          e.preventDefault();
-          e.stopPropagation();
-          delPost(p);
-        });
-        ac.appendChild(ed);
-        ac.appendChild(dl);
-        li.appendChild(ac);
-      }
-
-      list.appendChild(li);
+      var y = (p.date || '').slice(0, 4);
+      if (years.indexOf(y) === -1) years.push(y);
     });
+    years.forEach(function(y, gi){
+      var yr = document.createElement('li');
+      yr.className = 'year';
+      var span = document.createElement('span');
+      span.textContent = y;
+      yr.appendChild(span);
+      list.appendChild(yr);
+
+      var idx = 1;
+      shown.forEach(function(p){
+        if ((p.date || '').slice(0, 4) === y){
+          appendRow(p, idx, gi === 0 && idx === 1);   /* 最新一篇加角标 */
+          idx++;
+        }
+      });
+    });
+  }
+
+  function appendRow(p, no, isLatest){
+    var li = document.createElement('li');
+    var a = document.createElement('a');
+    a.href = 'post.html?p=' + encodeURIComponent(p.file);
+
+    if (no !== null){
+      var num = document.createElement('span');
+      num.className = 'no';
+      num.textContent = no < 10 ? '0' + no : String(no);
+      a.appendChild(num);
+    }
+
+    var t = document.createElement('span');
+    t.className = 'title';
+    t.innerHTML = window.Search.highlight(titleFor(p), state.q);
+    if (isLatest){
+      var b = document.createElement('span');
+      b.className = 'badge-latest';
+      b.textContent = I18N.t('badge_latest');
+      t.appendChild(b);
+    }
+    a.appendChild(t);
+
+    if (Array.isArray(p.tags) && p.tags.length){
+      var tg = document.createElement('span');
+      tg.className = 'tags';
+      p.tags.forEach(function(x){
+        var s = document.createElement('span');
+        s.className = 'tag';
+        s.textContent = x;
+        tg.appendChild(s);
+      });
+      a.appendChild(tg);
+    }
+
+    var d = document.createElement('span');
+    d.className = 'date';
+    d.textContent = window.Search.formatDate(p.date, I18N.lang);
+    a.appendChild(d);
+
+    if (matchedByContent(p)){
+      var sn = document.createElement('span');
+      sn.className = 'snippet';
+      sn.innerHTML = window.Search.highlight(
+        window.Search.snippet(mdCache[p.file], state.q), state.q);
+      a.appendChild(sn);
+    }
+
+    li.appendChild(a);
+
+    /* 站长快捷操作：编辑 / 删除（悬停出现） */
+    if (isOwner()){
+      var ac = document.createElement('span');
+      ac.className = 'row-actions';
+      var ed = document.createElement('a');
+      ed.className = 'act';
+      ed.href = 'write.html?p=' + encodeURIComponent(p.file);
+      ed.textContent = I18N.t('row_edit');
+      ed.addEventListener('click', function(e){ e.stopPropagation(); });
+      var dl = document.createElement('button');
+      dl.type = 'button';
+      dl.className = 'act danger';
+      dl.textContent = I18N.t('row_delete');
+      dl.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        delPost(p);
+      });
+      ac.appendChild(ed);
+      ac.appendChild(dl);
+      li.appendChild(ac);
+    }
+
+    list.appendChild(li);
   }
 
   /* ---------- 全文按需加载（仅在有搜索词时） ---------- */
@@ -290,6 +335,8 @@
     .catch(function(){ return []; })
     .then(function(data){
       posts = Array.isArray(data) ? data : [];
+      var pc = document.getElementById('post-count');
+      if (pc) pc.textContent = I18N.t('post_count').replace('{n}', posts.length);
       renderTagbar();
       ensureContent();
       renderList();
