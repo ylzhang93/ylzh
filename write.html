@@ -80,6 +80,24 @@
 
     <div class="frow">
       <label data-i18n="f_body">正文（Markdown + LaTeX）</label>
+      <div class="toolbar" id="toolbar" role="toolbar" aria-label="编辑工具">
+        <button type="button" data-cmd="bold" data-tb="tb_bold" title="加粗"><b>B</b></button>
+        <button type="button" data-cmd="italic" data-tb="tb_italic" title="斜体"><i>I</i></button>
+        <button type="button" data-cmd="heading" data-tb="tb_heading" title="标题">H</button>
+        <button type="button" data-cmd="list" data-tb="tb_list" title="列表">•</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="link" data-tb="tb_link" title="链接">🔗</button>
+        <button type="button" data-cmd="image" data-tb="tb_image" title="图片">🖼</button>
+        <button type="button" data-cmd="quote" data-tb="tb_quote" title="引用">❝</button>
+        <button type="button" data-cmd="code" data-tb="tb_code" title="代码块">&lt;/&gt;</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
+        <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
+        <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
+        <span class="sep"></span>
+        <button type="button" data-cmd="symbols" data-tb="tb_symbols" title="符号与表情" aria-expanded="false">☺</button>
+      </div>
+      <div id="symbol-panel" class="symbol-panel" hidden></div>
       <textarea id="f-body" spellcheck="false"></textarea>
     </div>
 
@@ -126,6 +144,14 @@
   var slugTouched = false;
   var token = '';
 
+  /* 符号面板内容（须在 openEditor 之前定义，var 提升只提升声明） */
+  var SYMBOLS = [
+    '∞','≠','≤','≥','±','×','÷','≈','∼','≡','∈','∉','⊂','⊆','∪','∩','∀','∃','∑','∏',
+    '∫','∂','∇','√','π','θ','α','β','γ','δ','ε','λ','μ','σ','φ','ω','ℝ','ℂ','ℕ','ℤ','ℚ',
+    '⊕','⊗','→','⇒','⇔','↦','·','∘','✓','✗','★','♥','☺',
+    '😀','😄','😊','😉','🙂','😢','😮','🤔','👍','❤️','✨','🎉','📝','📚','🧮','⭐','🔥','✅','❌'
+  ];
+
   /* ---------- 语言切换 ---------- */
   window.onLangChange = function(){
     document.title = I18N.t('write_title') + ' · zyl';
@@ -133,6 +159,9 @@
     Object.keys(ph).forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.placeholder = I18N.t(ph[id]);
+    });
+    document.querySelectorAll('[data-tb]').forEach(function(el){
+      el.title = I18N.t(el.getAttribute('data-tb'));
     });
   };
   window.onLangChange(I18N.lang);
@@ -203,6 +232,107 @@
     var slug = $('f-slug').value.trim() || 'post';
     $('filename-hint').textContent = 'posts/' + date + '-' + slug + '.md';
   }
+
+  /* ---------- 工具栏：一键插入（AoPS 式） ---------- */
+  function buildSymbolPanel(){
+    var box = $('symbol-panel');
+    SYMBOLS.forEach(function(ch){
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = ch;
+      b.addEventListener('click', function(){ insertAt(ch); closeSymbols(); });
+      box.appendChild(b);
+    });
+  }
+  function closeSymbols(){
+    $('symbol-panel').hidden = true;
+    document.querySelector('[data-cmd="symbols"]').setAttribute('aria-expanded', 'false');
+  }
+  $('toolbar').addEventListener('click', function(e){
+    var btn = e.target.closest ? e.target.closest('button[data-cmd]') : null;
+    if (!btn) return;
+    var cmd = btn.getAttribute('data-cmd');
+    if (cmd === 'symbols'){
+      var p = $('symbol-panel');
+      p.hidden = !p.hidden;
+      btn.setAttribute('aria-expanded', String(!p.hidden));
+      return;
+    }
+    runCmd(cmd);
+  });
+  document.addEventListener('click', function(e){
+    var inToolbar = e.target.closest && e.target.closest('#toolbar');
+    var inPanel = e.target.closest && e.target.closest('#symbol-panel');
+    if (!inToolbar && !inPanel) closeSymbols();
+  });
+
+  function ta(){ return $('f-body'); }
+  function refreshPreview(){ ta().dispatchEvent(new Event('input', { bubbles: true })); }
+
+  /* 环绕选区插入：**text**、$text$、[math]text[/math] */
+  function wrap(before, after, ph){
+    var t = ta(), v = t.value, s = t.selectionStart, e = t.selectionEnd;
+    var sel = v.slice(s, e) || ph || '';
+    t.value = v.slice(0, s) + before + sel + after + v.slice(e);
+    t.focus();
+    t.setSelectionRange(s + before.length, s + before.length + sel.length);
+    refreshPreview();
+  }
+  /* 在光标处插入文本 */
+  function insertAt(text, selFrom, selLen){
+    var t = ta(), v = t.value, s = t.selectionStart, e = t.selectionEnd;
+    t.value = v.slice(0, s) + text + v.slice(e);
+    t.focus();
+    var p = s + (selFrom === undefined ? text.length : selFrom);
+    t.setSelectionRange(p, p + (selLen || 0));
+    refreshPreview();
+  }
+  /* 当前行加前缀：## 标题、- 列表、> 引用 */
+  function prefixLine(prefix, ph){
+    var t = ta(), v = t.value, s = t.selectionStart;
+    var ls = v.lastIndexOf('\n', s - 1) + 1;
+    var le = v.indexOf('\n', s); if (le === -1) le = v.length;
+    var line = v.slice(ls, le);
+    var add = prefix + (line.trim() ? '' : ph);
+    t.value = v.slice(0, ls) + add + v.slice(ls);
+    t.focus();
+    t.setSelectionRange(ls + add.length, ls + add.length);
+    refreshPreview();
+  }
+  /* 块级插入：代码块 / 块级公式 */
+  function blockInsert(before, after, ph){
+    var t = ta(), v = t.value, s = t.selectionStart, e = t.selectionEnd;
+    var sel = v.slice(s, e) || ph || '';
+    var block = '\n' + before + sel + after + '\n';
+    t.value = v.slice(0, s) + block + v.slice(e);
+    t.focus();
+    t.setSelectionRange(s + before.length + 1, s + before.length + 1 + sel.length);
+    refreshPreview();
+  }
+
+  function runCmd(cmd){
+    switch (cmd){
+      case 'bold':     wrap('**', '**', '粗体文字'); break;
+      case 'italic':   wrap('*', '*', '斜体文字'); break;
+      case 'heading':  prefixLine('## ', '标题'); break;
+      case 'list':     prefixLine('- ', '列表项'); break;
+      case 'quote':    prefixLine('> ', '引用内容'); break;
+      case 'code':     blockInsert('```\n', '\n```', '代码'); break;
+      case 'link':     wrap('[', '](https://)', '链接文字'); break;
+      case 'image':    insertAt('![图片描述](https://example.com/image.png)', 2, 4); break;
+      case 'math':     wrap('$', '$', 'x^2'); break;
+      case 'mathblock':blockInsert('$$\n', '\n$$', '\\frac{a}{b}'); break;
+      case 'aopsmath': wrap('[math]', '[/math]', 'x^2'); break;
+    }
+  }
+
+  /* Tab 键插入空格（方便写代码） */
+  $('f-body').addEventListener('keydown', function(e){
+    if (e.key === 'Tab'){
+      e.preventDefault();
+      insertAt('    ');
+    }
+  });
 
   /* ---------- 正文实时预览（防抖） ---------- */
   var previewTimer = null;
@@ -447,6 +577,7 @@
   function init(){
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
     if (token) $('f-token').value = token;
+    buildSymbolPanel();
     loadExistingList();
     updateFilename();
     var sp = new URLSearchParams(location.search);

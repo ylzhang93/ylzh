@@ -81,7 +81,20 @@
       plus_new: '写日志',
       comments_title: '评论',
       comments_note: '回复需要 GitHub 账号，登录后即可跟帖。',
-      token_link: '创建令牌 →'
+      token_link: '创建令牌 →',
+
+      tb_bold: '加粗',
+      tb_italic: '斜体',
+      tb_heading: '标题',
+      tb_list: '列表',
+      tb_quote: '引用',
+      tb_code: '代码块',
+      tb_link: '链接',
+      tb_image: '图片',
+      tb_math: '行内公式',
+      tb_mathblock: '块级公式',
+      tb_aopsmath: 'AoPS 公式',
+      tb_symbols: '符号与表情'
     },
 
     en: {
@@ -153,7 +166,20 @@
       plus_new: 'New Post',
       comments_title: 'Comments',
       comments_note: 'Replies require a GitHub account.',
-      token_link: 'Create a token →'
+      token_link: 'Create a token →',
+
+      tb_bold: 'Bold',
+      tb_italic: 'Italic',
+      tb_heading: 'Heading',
+      tb_list: 'List',
+      tb_quote: 'Quote',
+      tb_code: 'Code block',
+      tb_link: 'Link',
+      tb_image: 'Image',
+      tb_math: 'Inline math',
+      tb_mathblock: 'Block math',
+      tb_aopsmath: 'AoPS math',
+      tb_symbols: 'Symbols & emoji'
     }
   };
 
