@@ -323,6 +323,16 @@
       });
       box.appendChild(b);
     });
+    /* 自定义宏：:::macros 块 */
+    var mb = document.createElement('button');
+    mb.type = 'button';
+    mb.textContent = 'macros';
+    mb.title = '::: macros 自定义宏（\\newcommand）';
+    mb.addEventListener('click', function(){
+      blockInsert(':::macros\n', '\n:::', '\\newcommand{\\RR}{\\mathbb{R}}');
+      closeThm();
+    });
+    box.appendChild(mb);
   }
   function closeSymbols(){
     var p = $('symbol-panel');
