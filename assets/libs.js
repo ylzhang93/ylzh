@@ -173,9 +173,10 @@
        把当前宏表（:::macros 定义的 \newcommand）写入 data-add-to-preamble，
        TikZJax 会把它拼进 TeX preamble——否则 tikzcd 里的 \G、\A 等自定义宏
        在 TikZJax 的独立 TeX 引擎里未定义，编译失败只能显示原生代码。
-       tikz-cd 需显式 \usepackage{tikz-cd}（TikZJax 内置该文件但不自动加载）。 */
+       TikZJax 内核默认不加载 amsmath/amssymb：\mathbb、\frac 等常用命令会
+       编译失败并显示破图，必须显式 \usepackage；tikz-cd 也需显式加载。 */
     function tikzPreamble(code){
-      var parts = [];
+      var parts = ['\\usepackage{amsmath,amssymb}'];
       if (/\\begin\{tikzcd\}/.test(code)) parts.push('\\usepackage{tikz-cd}');
       Object.keys(macros).forEach(function(k){
         parts.push('\\newcommand{' + k + '}{' + macros[k] + '}');
