@@ -130,35 +130,17 @@
     <!-- 站点设置：个人配置只保存在本浏览器（localStorage），不进代码/仓库 -->
     <div class="frow" id="settings-row">
       <label data-i18n="settings_title">站点设置（仅保存在本浏览器）</label>
-      <div class="frow-inline">
-        <div class="frow">
-          <label data-i18n="cfg_owner">GitHub 用户名</label>
-          <input id="s-owner" type="text" autocomplete="off">
-        </div>
-        <div class="frow">
-          <label data-i18n="cfg_repo">公开仓库名</label>
-          <input id="s-repo" type="text" list="s-repos" autocomplete="off">
-        </div>
-      </div>
-      <div class="frow-inline">
-        <div class="frow">
-          <label data-i18n="cfg_priv">私有仓库名</label>
-          <input id="s-priv" type="text" list="s-repos" autocomplete="off">
-        </div>
-        <div class="frow">
-          <label data-i18n="cfg_editorkey">写作口令（可选）</label>
-          <input id="s-editorkey" type="text" autocomplete="off">
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:1rem;margin-top:.6rem;flex-wrap:wrap">
-        <button id="s-owner-fetch" class="btn btn-ghost" type="button" data-i18n="s_owner_fetch">从令牌获取用户名</button>
-        <button id="s-repos-fetch" class="btn btn-ghost" type="button" data-i18n="s_repos_fetch">获取我的仓库</button>
+      <div class="settings-bar">
+        <input id="s-owner" type="text" autocomplete="off">
+        <input id="s-repo" type="text" list="s-repos" autocomplete="off">
+        <input id="s-priv" type="text" list="s-repos" autocomplete="off">
+        <input id="s-editorkey" type="text" autocomplete="off" class="s-small">
+        <button id="s-owner-fetch" class="s-btn" type="button" title="从令牌获取用户名">⟳</button>
+        <button id="s-repos-fetch" class="s-btn" type="button" title="获取我的仓库">▦</button>
+        <button id="s-save" class="s-btn s-save" type="button" data-i18n="cfg_save_short">保存</button>
+        <span id="s-msg" class="s-msg" hidden data-i18n="cfg_saved">已保存到本浏览器。</span>
       </div>
       <datalist id="s-repos"></datalist>
-      <div style="display:flex;align-items:center;gap:1rem;margin-top:.8rem">
-        <button id="s-save" class="btn btn-ghost" type="button" data-i18n="cfg_save">保存设置</button>
-        <span id="s-msg" class="filename-hint" hidden data-i18n="cfg_saved">已保存到本浏览器。</span>
-      </div>
     </div>
 
     <div class="frow" style="margin-bottom:.6rem">
@@ -257,6 +239,7 @@
     });
     var pc = document.getElementById('preview-close');
     if (pc) pc.title = I18N.t('preview_close');
+    if (window.setSettingsLabels) setSettingsLabels();
   };
   window.onLangChange(I18N.lang);
 
@@ -829,11 +812,25 @@
   });
 
   /* ---------- 站点设置（个人配置只存本浏览器 localStorage） ---------- */
+  function setSettingsLabels(){
+    var ph = { 's-owner': 'cfg_owner', 's-repo': 'cfg_repo',
+               's-priv': 'cfg_priv', 's-editorkey': 'cfg_editorkey' };
+    Object.keys(ph).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.placeholder = I18N.t(ph[id]);
+    });
+    var tb = { 's-owner-fetch': 's_owner_fetch', 's-repos-fetch': 's_repos_fetch' };
+    Object.keys(tb).forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.title = I18N.t(tb[id]);
+    });
+  }
   function loadSettings(){
     $('s-owner').value = cfg.owner || '';
     $('s-repo').value = cfg.repo || '';
     $('s-priv').value = cfg.privateRepo || '';
     $('s-editorkey').value = cfg.editorKey || '';
+    setSettingsLabels();
   }
   function currentToken(){
     var t = $('f-token').value.trim();
