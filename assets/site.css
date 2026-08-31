@@ -408,29 +408,31 @@ article.post .thm-claim .thm-head::after{content:" " counter(claim)}
 }
 .frow-inline{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
 .frow-inline .full{grid-column:1 / -1}
-/* 站点设置紧凑条：一行放四个输入 + 两个小按钮 + 保存 */
-.settings-bar{
-  display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin-top:.15rem;
+/* 站点设置单行条：标签 + 四个输入 + 两个小按钮 + 保存，一行排下、永不折行 */
+.settings-row{
+  display:flex;flex-wrap:nowrap;gap:.4rem;align-items:center;
 }
-.settings-bar input{
-  flex:1 1 9.5rem;min-width:0;font-family:var(--sans);font-size:.82rem;color:var(--ink);
+.settings-row .settings-label{
+  flex:0 0 auto;font-size:.82rem;color:var(--ink-soft);white-space:nowrap;
+}
+.settings-row input{
+  flex:1 1 0;min-width:0;font-family:var(--sans);font-size:.78rem;color:var(--ink);
   background:var(--paper);border:1px solid var(--line);border-radius:6px;
-  padding:.4rem .6rem;transition:border-color .3s;
+  padding:.34rem .5rem;transition:border-color .3s;
 }
-.settings-bar input:focus{outline:none;border-color:var(--accent)}
-.settings-bar input.s-small{flex:0 1 7.5rem}
-.settings-bar .s-btn{
-  font-family:var(--sans);font-size:.82rem;line-height:1;color:var(--ink-soft);
+.settings-row input:focus{outline:none;border-color:var(--accent)}
+.settings-row .s-btn{
+  flex:0 0 auto;font-family:var(--sans);font-size:.8rem;line-height:1;color:var(--ink-soft);
   background:transparent;border:1px solid var(--line);border-radius:6px;
-  padding:.44rem .55rem;cursor:pointer;transition:color .3s,border-color .3s;
+  padding:.4rem .5rem;cursor:pointer;transition:color .3s,border-color .3s;
 }
-.settings-bar .s-btn:hover{color:var(--accent);border-color:var(--accent)}
-.settings-bar .s-save{
+.settings-row .s-btn:hover{color:var(--accent);border-color:var(--accent)}
+.settings-row .s-save{
   color:var(--paper);background:var(--accent);border-color:var(--accent);
-  padding:.44rem .75rem;
+  padding:.4rem .7rem;
 }
-.settings-bar .s-save:hover{color:var(--paper);opacity:.88}
-.settings-bar .s-msg{font-size:.76rem;color:var(--ink-soft)}
+.settings-row .s-save:hover{color:var(--paper);opacity:.88}
+.settings-row .s-msg{flex:0 0 auto;font-size:.72rem;color:var(--ink-soft);white-space:nowrap}
 .chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem}
 .chip{
   font-family:var(--sans);font-size:.7rem;letter-spacing:.05em;color:var(--accent);
