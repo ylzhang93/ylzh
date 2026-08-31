@@ -102,6 +102,7 @@
         <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
         <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
         <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
+        <button type="button" data-cmd="tikzcd" data-tb="tb_tikzcd" title="交换图">⇄</button>
         <button type="button" data-cmd="env" data-tb="tb_env" title="多行环境">env</button>
         <button type="button" data-cmd="spoiler" data-tb="tb_spoiler" data-i18n="tb_spoiler_lbl" title="隐藏解答（点击展开）">隐藏</button>
         <span class="sep"></span>
@@ -485,6 +486,8 @@
       case 'math':     wrap('$', '$', 'x^2'); break;
       case 'mathblock':blockInsert('$$\n', '\n$$', '\\frac{a}{b}'); break;
       case 'aopsmath': wrap('[math]', '[/math]', 'x^2'); break;
+      case 'tikzcd':  blockInsert('\\begin{tikzcd}\n', '\n\\end{tikzcd}\n',
+                        "A \\arrow[r, \"f\"] & B \\\\\nC \\arrow[ur, \"g\"'] & D"); break;
       case 'env':      blockInsert('$$\n\\begin{align*}\n', '\n\\end{align*}\n$$',
                         'a &= b + c \\\\\n  &= d'); break;
       case 'spoiler':  blockInsert('<details>\n<summary>' + I18N.t('spoiler_summary') +
@@ -510,6 +513,7 @@
       var res = window.LIBS.renderMarkdown(body, { lang: I18N.lang, macros: cfg.katexMacros || {} });
       pv.innerHTML = res.html;
       window.LIBS.renderMathIn(pv, res.macros);
+      window.LIBS.renderTikz(pv);   /* 交换图 \begin{tikzcd} */
       var modal = $('preview-modal');
       modal.hidden = false;
       document.body.style.overflow = 'hidden';   /* 锁定背景滚动 */

@@ -31,6 +31,15 @@
   }
 
   var loaded = false;
+  var tikzStarted = false;   /* TikZJax 是否已加载（懒加载，有 tikz 块才触发） */
+
+  /* TikZJax fork：MutationObserver 自动渲染动态插入的 <script type="text/tikz">
+     资源（run-tex.js / tex.wasm.gz / core.dump.gz / fonts）与其同目录，故两 CDN 都指向 dist/ */
+  var TIKZ_URLS = [
+    'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js',
+    'https://unpkg.com/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js'
+  ];
+  var TIKZ_CSS_BASE = 'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/';
 
   /* 加载 marked + dompurify + katex + auto-render，done(ok) */
   function load(done){
@@ -93,6 +102,7 @@
     var base = opts.macros || {};
     Object.keys(base).forEach(function(k){ macros[k] = base[k]; });
     var mathSpans = [];
+    var tikzBlocks = [];   /* \begin{tikzcd}…\end{tikzcd} / \begin{tikzpicture}…\end{tikzpicture} 原文 */
     function protectSeg(seg){
       /* 自定义宏 :::macros ... ::: 块：解析并移除（不渲染） */
       seg = seg.replace(/^:::macros[ \t]*\n([\s\S]*?)^:::[ \t]*\n?/gm, function(_, body){
@@ -101,6 +111,13 @@
           if (parsed) macros[parsed.name] = parsed.def;
         });
         return '';
+      });
+      /* TikZ 交换图/图形：整块提取为 ⟦Tn⟧ 占位符（须在数学保护之前，
+         块内的 $…$、_、% 等原样保留，交给 TikZJax 处理）
+         顺带吃掉常见的外层定界符 $$…$$ 或 \[…\] */
+      seg = seg.replace(/(?:\$\$\s*|\\\[\s*)?\\begin\{(tikzcd|tikzpicture)\}[\s\S]*?\\end\{\1\}(?:\s*\$\$|\s*\\\])?/g, function(m){
+        tikzBlocks.push(m.replace(/^\$\$\s*|^\s*\\\[\s*|\s*\$\$$|\s*\\\]\s*$/g, ''));
+        return '\u27E6T' + (tikzBlocks.length - 1) + '\u27E7';
       });
       /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
       seg = seg.replace(THM_RE, function(_, type, title, body){
@@ -144,7 +161,15 @@
     html = html.replace(/\u27E6(\d+)\u27E7/g, function(_, i){
       return escapeHtml(mathSpans[+i]);   /* & < > 转义，KaTeX 从文本节点读回原字符 */
     });
-    return { html: window.DOMPurify.sanitize(html), macros: macros };
+    /* DOMPurify 之后再还原 tikz 块：<script> 标签若先于 sanitize 会被剥掉。
+       转义 </script 防止内容提前闭合标签（TikZ 代码几乎不会含，防御性处理） */
+    var clean = window.DOMPurify.sanitize(html);
+    clean = clean.replace(/\u27E6T(\d+)\u27E7/g, function(_, i){
+      var code = tikzBlocks[+i] || '';
+      code = code.replace(/<\/script/gi, '<\\/script');
+      return '<script type="text/tikz">' + code + '</script>';
+    });
+    return { html: clean, macros: macros, hasTikz: tikzBlocks.length > 0 };
   }
 
   /* 对容器内公式做 KaTeX 排版（macros 为自定义宏表） */
@@ -161,6 +186,24 @@
     };
     if (macros && Object.keys(macros).length) opts.macros = macros;
     renderMathInElement(el, opts);
+  }
+
+  /* 懒加载 TikZJax 并渲染容器内的 <script type="text/tikz"> 块。
+     该 fork 用 MutationObserver 监听 body：加载后新插入的 tikz 块自动渲染；
+     加载时已有的块也会被扫描处理，所以只需保证 tikzjax.js 在 script 插入后加载。 */
+  function renderTikz(el){
+    if (!el || !el.querySelector) return;
+    if (!el.querySelector('script[type="text/tikz"]')) return;
+    if (tikzStarted) return;               /* 已加载：observer 自动接管后续块 */
+    tikzStarted = true;
+    /* TeX 字体：引入 CDN 上的 fonts.css（内部 url() 按 CSS 自身地址解析，无需改写） */
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = TIKZ_CSS_BASE + 'fonts.css';
+    document.head.appendChild(l);
+    loadScript(TIKZ_URLS, function(ok){
+      if (!ok) tikzStarted = false;        /* 全部 CDN 失败：允许下次重试 */
+    });
   }
 
   /* giscus 评论区：按文章注入脚本（term 唯一标识 → 一篇一个 Discussion）
@@ -196,6 +239,7 @@
     load: load,
     renderMarkdown: renderMarkdown,
     renderMathIn: renderMathIn,
+    renderTikz: renderTikz,
     loadComments: loadComments
   };
 })();

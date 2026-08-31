@@ -243,6 +243,7 @@
         '<a class="back" href="#" id="priv-back">← ' + I18N.t('private_back') + '</a>' +
         '<h1>' + (p.title || '') + '</h1>' + meta + res.html;
       window.LIBS.renderMathIn(reader, res.macros);
+      window.LIBS.renderTikz(reader);   /* 交换图 \begin{tikzcd} */
       document.getElementById('priv-back').addEventListener('click', function(e){
         e.preventDefault();
         reader.hidden = true;

@@ -183,6 +183,7 @@
         window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
 
         window.LIBS.renderMathIn(article, res.macros);
+        window.LIBS.renderTikz(article);    /* 交换图 \begin{tikzcd}（懒加载 TikZJax） */
         refreshComments();       /* 评论区（配置了就显示） */
         window.scrollTo(0, 0);
       }).catch(function(){
