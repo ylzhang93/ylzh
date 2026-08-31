@@ -1,21 +1,19 @@
 /* ============================================================
    站点配置
+   注意：个人敏感信息（owner / repo / privateRepo / editorKey）
+   不写在这里！它们保存在你自己的浏览器 localStorage 里，
+   在写作页（write.html）的「站点设置」中填写，每个浏览器单独保存。
+   此文件只保留非敏感配置。
    ============================================================ */
 window.SITE_CONFIG = {
-  /* GitHub 用户名 */
-  owner: '',
-  /* 仓库名（发布到 GitHub Pages 的那个仓库） */
-  repo: '',
-  /* 私有笔记仓库（独立私有仓库，public 仓库的所有分支都是公开的，私有内容必须放这里）
-     令牌需要有该仓库的读取权限（fine-grained 令牌请勾选 Contents: Read） */
-  privateRepo: '',
+  /* 以下个人配置由浏览器本地提供（写作页「站点设置」填写） */
+  owner: '',            /* GitHub 用户名 */
+  repo: '',             /* 公开仓库 */
+  privateRepo: '',      /* 私有笔记仓库 */
+  editorKey: '',        /* 写作口令（可选，隐私帘） */
+
   /* 默认分支 */
   branch: 'main',
-
-  /* 写作页口令：只有知道口令的人能打开编辑器界面。
-     注意：口令写在网页源码里，只是"隐私帘"——真正的写权限
-     由 GitHub Token 保证（见 README）。留空则直接显示编辑器。 */
-  editorKey: '',
 
   /* 全站 LaTeX 自定义宏（KaTeX macros）：写 \R 就是 \mathbb{R}。
      也可以只在一篇文章里用 :::macros 块定义（见 README「自定义宏」）。 */
@@ -31,17 +29,35 @@ window.SITE_CONFIG = {
   },
 
   /* 评论区（giscus，基于 GitHub Discussions，访客用 GitHub 账号即可回复）
-     启用步骤见 README「评论与回复」：
-     1. 仓库 Settings → Features 启用 Discussions
-     2. 安装 https://github.com/apps/giscus 并授权该仓库
-     3. 打开 https://giscus.app 选择分类，复制 repo-id / category-id
-     4. 填好下面各项并把 enabled 改为 true */
+     启用步骤见 README「评论与回复」 */
   comments: {
     enabled: false,
-    repo: '',                    /* 形如 "用户名/仓库名" */
+    repo: '',
     repoId: '',
     category: 'Announcements',
     categoryId: '',
-    strict: false                /* true = 仅仓库协作者可评论 */
+    strict: false
   }
 };
+
+/* 个人配置从 localStorage 合并（每台浏览器单独保存，见写作页「站点设置」） */
+(function(){
+  'use strict';
+  var KEYS = ['owner', 'repo', 'privateRepo', 'editorKey'];
+  try {
+    KEYS.forEach(function(k){
+      var v = localStorage.getItem('zyl_cfg_' + k);
+      if (v !== null) window.SITE_CONFIG[k] = v;
+    });
+  } catch (e) {}
+  window.SITE_CFG = {
+    get: function(k){ return window.SITE_CONFIG[k]; },
+    set: function(k, v){
+      window.SITE_CONFIG[k] = v;
+      try {
+        if (v) localStorage.setItem('zyl_cfg_' + k, v);
+        else localStorage.removeItem('zyl_cfg_' + k);
+      } catch (e) {}
+    }
+  };
+})();

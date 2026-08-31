@@ -150,6 +150,7 @@ AoPS 的 `\hide{}` 是论坛专用宏，本站不支持；用网页原生折叠�
 
 1. **创建令牌**（只做一次）：GitHub → Settings → Developer settings → Personal access tokens → Generate new token → 勾选 `repo`（经典令牌）或 fine-grained 令牌勾选 `Contents: Read and write` → 生成后**复制**（只显示一次）
 2. **打开写作页**：博客页点「＋ 写日志」（即 `write.html?new=1`）。浏览器**没存过令牌时页面显示 404**（访客视角：页面不存在）；点页面底部几乎看不见的「站长入口」进入并粘贴令牌，之后你的浏览器直接进入编辑器
+3. **填写站点设置（首次，每台浏览器一次）**：写作页「站点设置」填 GitHub 用户名（`ylzhang93`）、公开仓库（`ylzh`）、私有仓库（`ylzh-private`）、写作口令（可选）→ 保存。**这些只存本浏览器 localStorage，不进代码/仓库**
 3. **填写**：标题、英文标题（可选）、标签（回车添加）、正文（Markdown + LaTeX，自动实时预览）
 4. **粘贴令牌**：粘到「GitHub Token」输入框（只保存在你的浏览器 localStorage）
 5. **保存发布**：文章通过 GitHub API 写入仓库 `posts/` 并更新清单，一两分钟后博客页可见；成功后点消息里的链接直接看文章
@@ -265,7 +266,7 @@ assets/site.css     共享样式
 assets/i18n.js      中英词典与语言切换
 assets/libs.js      前端库加载（多 CDN 回退）+ Markdown 渲染
 assets/search.js    搜索 / 标签 / slug 工具
-assets/config.js    站点配置（owner / repo / 写作口令）
+assets/config.js    非敏感配置（宏 / 评论区）；个人配置（owner/repo/私有仓库/口令）在写作页「站点设置」，仅存本浏览器
 posts/              博客文章（.md）与清单（index.json）
 new_post.py         发帖脚本（命令行备选，python new_post.py "标题"）
 source/img/         （已移除照片；如需放图，图片放这里）

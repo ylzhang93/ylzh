@@ -127,6 +127,35 @@
       <p class="filename-hint"><a id="token-link" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" data-i18n="token_link">创建令牌 →</a></p>
     </div>
 
+    <!-- 站点设置：个人配置只保存在本浏览器（localStorage），不进代码/仓库 -->
+    <div class="frow" id="settings-row">
+      <label data-i18n="settings_title">站点设置（仅保存在本浏览器）</label>
+      <div class="frow-inline">
+        <div class="frow">
+          <label data-i18n="cfg_owner">GitHub 用户名</label>
+          <input id="s-owner" type="text" autocomplete="off">
+        </div>
+        <div class="frow">
+          <label data-i18n="cfg_repo">公开仓库名</label>
+          <input id="s-repo" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div class="frow-inline">
+        <div class="frow">
+          <label data-i18n="cfg_priv">私有仓库名</label>
+          <input id="s-priv" type="text" autocomplete="off">
+        </div>
+        <div class="frow">
+          <label data-i18n="cfg_editorkey">写作口令（可选）</label>
+          <input id="s-editorkey" type="text" autocomplete="off">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem;margin-top:.8rem">
+        <button id="s-save" class="btn btn-ghost" type="button" data-i18n="cfg_save">保存设置</button>
+        <span id="s-msg" class="filename-hint" hidden data-i18n="cfg_saved">已保存到本浏览器。</span>
+      </div>
+    </div>
+
     <div class="frow" style="margin-bottom:.6rem">
       <label data-i18n="f_status">状态（决定内容存放的仓库）</label>
       <select id="f-status">
@@ -794,6 +823,24 @@
     });
   });
 
+  /* ---------- 站点设置（个人配置只存本浏览器 localStorage） ---------- */
+  function loadSettings(){
+    $('s-owner').value = cfg.owner || '';
+    $('s-repo').value = cfg.repo || '';
+    $('s-priv').value = cfg.privateRepo || '';
+    $('s-editorkey').value = cfg.editorKey || '';
+  }
+  $('s-save').addEventListener('click', function(){
+    window.SITE_CFG.set('owner', $('s-owner').value.trim());
+    window.SITE_CFG.set('repo', $('s-repo').value.trim());
+    window.SITE_CFG.set('privateRepo', $('s-priv').value.trim());
+    window.SITE_CFG.set('editorKey', $('s-editorkey').value.trim());
+    cfg = window.SITE_CONFIG;   /* 同一对象引用，无需重新获取 */
+    var m = $('s-msg');
+    m.hidden = false;
+    setTimeout(function(){ m.hidden = true; }, 2500);
+  });
+
   /* ---------- 初始化 ---------- */
   function init(){
     try { token = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
@@ -801,6 +848,7 @@
       $('f-token').value = token;
       $('f-remember').checked = true;   /* 已有记忆令牌 → 开关保持勾选 */
     }
+    loadSettings();
     buildSymbolPanel();
     buildFmtPanel();
     buildThmPanel();
