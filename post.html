@@ -11,10 +11,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=xy1">
 <script src="assets/i18n.js"></script>
 <script src="assets/config.js"></script>
-<script src="assets/libs.js"></script>
+<script src="assets/libs.js?v=xy1"></script>
 </head>
 
 <body>
@@ -183,7 +183,7 @@
         window.onLangChange();   /* 页面标题 + 上一篇/下一篇 */
 
         window.LIBS.renderMathIn(article, res.macros);
-        window.LIBS.renderTikz(article);    /* 交换图 \begin{tikzcd}（懒加载 TikZJax） */
+        window.LIBS.renderXy(article);      /* 交换图 \xymatrix */
         refreshComments();       /* 评论区（配置了就显示） */
         window.scrollTo(0, 0);
       }).catch(function(){

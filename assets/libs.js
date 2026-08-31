@@ -31,22 +31,9 @@
   }
 
   var loaded = false;
-  var tikzStarted = false;   /* TikZJax 是否已加载（懒加载，有 tikz 块才触发） */
-
-  /* TikZJax fork：MutationObserver 自动渲染动态插入的 <script type="text/tikz">
-     资源（run-tex.js / tex.wasm.gz / core.dump.gz / fonts）与其同目录。
-     已自托管到本站 assets/tikzjax/（本地服务器 & GitHub Pages 同源加载，
-     不依赖 jsdelivr/unpkg 等第三方 CDN，预览/线上都稳定）；
-     外部 CDN 仅作后备。 */
-  var TIKZ_URLS = [
-    'assets/tikzjax/tikzjax.js',
-    'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js',
-    'https://unpkg.com/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js'
-  ];
-  var TIKZ_CSS = [
-    'assets/tikzjax/fonts.css',
-    'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/fonts.css'
-  ];
+  var xyStarted = false;
+  var xyReady = false;
+  var xyWaiters = [];        /* MathJax + XyJax 只加载一次，等待者统一回调 */
 
   /* 加载 marked + dompurify + katex + auto-render，done(ok) */
   function load(done){
@@ -109,7 +96,8 @@
     var base = opts.macros || {};
     Object.keys(base).forEach(function(k){ macros[k] = base[k]; });
     var mathSpans = [];
-    var tikzBlocks = [];   /* \begin{tikzcd}…\end{tikzcd} / \begin{tikzpicture}…\end{tikzpicture} 原文 */
+    var legacyTikz = [];  /* 仅用于提示迁移，不再加载浏览器 TeX/WASM */
+    var xyBlocks = [];     /* \xymatrix{...}：交给 MathJax + XyJax-v3 */
     function protectSeg(seg){
       /* 自定义宏 :::macros ... ::: 块：解析并移除（不渲染） */
       seg = seg.replace(/^:::macros[ \t]*\n([\s\S]*?)^:::[ \t]*\n?/gm, function(_, body){
@@ -119,12 +107,36 @@
         });
         return '';
       });
-      /* TikZ 交换图/图形：整块提取为 ⟦Tn⟧ 占位符（须在数学保护之前，
-         块内的 $…$、_、% 等原样保留，交给 TikZJax 处理）
-         顺带吃掉常见的外层定界符 $$…$$ 或 \[…\] */
+      /* Xy-pic 交换图：用括号计数提取完整 \xymatrix{...}（支持内部嵌套花括号），
+         比正则可靠；必须先于 Markdown/KaTeX 保护。 */
+      (function(){
+        var out = '', pos = 0;
+        while (true){
+          var start = seg.indexOf('\\xymatrix', pos);
+          if (start < 0){ out += seg.slice(pos); break; }
+          var open = seg.indexOf('{', start + 9);
+          if (open < 0){ out += seg.slice(pos); break; }
+          var depth = 0, end = -1;
+          for (var k = open; k < seg.length; k++){
+            if (seg.charAt(k) === '\\'){ k++; continue; } /* \{ / \} 不参与计数 */
+            if (seg.charAt(k) === '{') depth++;
+            else if (seg.charAt(k) === '}'){
+              depth--;
+              if (depth === 0){ end = k + 1; break; }
+            }
+          }
+          if (end < 0){ out += seg.slice(pos); break; }
+          out += seg.slice(pos, start);
+          xyBlocks.push(seg.slice(start, end));
+          out += '\u27E6X' + (xyBlocks.length - 1) + '\u27E7';
+          pos = end;
+        }
+        seg = out;
+      })();
+      /* 旧 tikzcd/tikzpicture 不再在浏览器运行完整 TeX；显示迁移提示。 */
       seg = seg.replace(/(?:\$\$\s*|\\\[\s*)?\\begin\{(tikzcd|tikzpicture)\}[\s\S]*?\\end\{\1\}(?:\s*\$\$|\s*\\\])?/g, function(m){
-        tikzBlocks.push(m.replace(/^\$\$\s*|^\s*\\\[\s*|\s*\$\$$|\s*\\\]\s*$/g, ''));
-        return '\u27E6T' + (tikzBlocks.length - 1) + '\u27E7';
+        legacyTikz.push(m);
+        return '\u27E6L' + (legacyTikz.length - 1) + '\u27E7';
       });
       /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
       seg = seg.replace(THM_RE, function(_, type, title, body){
@@ -168,31 +180,26 @@
     html = html.replace(/\u27E6(\d+)\u27E7/g, function(_, i){
       return escapeHtml(mathSpans[+i]);   /* & < > 转义，KaTeX 从文本节点读回原字符 */
     });
-    /* DOMPurify 之后再还原 tikz 块：<script> 标签若先于 sanitize 会被剥掉。
-       转义 </script 防止内容提前闭合标签（TikZ 代码几乎不会含，防御性处理）。
-       把当前宏表（:::macros 定义的 \newcommand）写入 data-add-to-preamble，
-       TikZJax 会把它拼进 TeX preamble——否则 tikzcd 里的 \G、\A 等自定义宏
-       在 TikZJax 的独立 TeX 引擎里未定义，编译失败只能显示原生代码。
-       TikZJax 内核默认不加载 amsmath/amssymb：\mathbb、\frac 等常用命令会
-       编译失败并显示破图，必须显式 \usepackage；tikz-cd 也需显式加载。 */
-    function tikzPreamble(code){
-      var parts = ['\\usepackage{amsmath,amssymb}'];
-      if (/\\begin\{tikzcd\}/.test(code)) parts.push('\\usepackage{tikz-cd}');
-      Object.keys(macros).forEach(function(k){
-        parts.push('\\newcommand{' + k + '}{' + macros[k] + '}');
-      });
-      return parts.join('\n');
-    }
     var clean = window.DOMPurify.sanitize(html);
-    clean = clean.replace(/\u27E6T(\d+)\u27E7/g, function(_, i){
-      var code = tikzBlocks[+i] || '';
-      code = code.replace(/<\/script/gi, '<\\/script');
-      var pre = tikzPreamble(code);
-      return '<script type="text/tikz"' +
-        (pre ? ' data-add-to-preamble="' + escapeHtml(pre) + '"' : '') +
-        '>' + code + '</script>';
+    clean = clean.replace(/\u27E6L(\d+)\u27E7/g, function(){
+      return '<div class="tikz-error">旧 tikzcd 语法已停用；请使用工具栏 ⇄ 插入 \\xymatrix 交换图。</div>';
     });
-    return { html: clean, macros: macros, hasTikz: tikzBlocks.length > 0 };
+    /* XyJax 槽位在 sanitize 后生成，data-xy 仅保存纯 TeX 文本；
+       MathJax typeset 时再读取，正文的 KaTeX 渲染不受影响。 */
+    clean = clean.replace(/\u27E6X(\d+)\u27E7/g, function(_, i){
+      var defs = [];
+      Object.keys(macros).forEach(function(k){
+        defs.push('\\newcommand{' + k + '}{' + macros[k] + '}');
+      });
+      var code = defs.join(' ') + ' ' + (xyBlocks[+i] || '');
+      return '<div class="xy-diagram" data-xy="' + escapeHtml(code) + '"></div>';
+    });
+    return {
+      html: clean,
+      macros: macros,
+      hasLegacyTikz: legacyTikz.length > 0,
+      hasXy: xyBlocks.length > 0
+    };
   }
 
   /* 对容器内公式做 KaTeX 排版（macros 为自定义宏表） */
@@ -211,26 +218,71 @@
     renderMathInElement(el, opts);
   }
 
-  /* 懒加载 TikZJax 并渲染容器内的 <script type="text/tikz"> 块。
-     该 fork 用 MutationObserver 监听 body：加载后新插入的 tikz 块自动渲染；
-     加载时已有的块也会被扫描处理，所以只需保证 tikzjax.js 在 script 插入后加载。
-     资源优先从本站 assets/tikzjax/ 加载（本地预览 & GitHub Pages 同源，稳定），
-     失败才回退第三方 CDN。 */
-  function renderTikz(el){
-    if (!el || !el.querySelector) return;
-    if (!el.querySelector('script[type="text/tikz"]')) return;
-    if (tikzStarted) return;               /* 已加载：observer 自动接管后续块 */
-    tikzStarted = true;
-    /* TeX 字体：引入 fonts.css（内部 url('fonts/…') 按 CSS 自身地址解析，
-       自托管时解析到本站 assets/tikzjax/fonts/，无需改写） */
-    loadCss(TIKZ_CSS[0]);
-    loadScript(TIKZ_URLS, function(ok){
-      if (!ok){                             /* 本地失败 → 回退 CDN */
-        loadCss(TIKZ_CSS[1]);
-        loadScript(TIKZ_URLS.slice(1), function(ok2){
-          if (!ok2) tikzStarted = false;    /* 全部失败：允许下次重试 */
-        });
+  /* MathJax 3 + XyJax-v3：只在出现 \xymatrix 时懒加载。
+     普通公式继续由 KaTeX 处理；XyJax 输出内联 SVG，快于浏览器内运行完整 TeX。 */
+  function loadXy(done){
+    if (xyReady) return done(true);
+    xyWaiters.push(done);
+    if (xyStarted) return;
+    xyStarted = true;
+
+    var xyBase = new URL('assets/xyjax/', document.baseURI).href.replace(/\/$/, '');
+    window.MathJax = {
+      loader: {
+        load: ['[custom]/xypic.js'],
+        paths: { custom: xyBase }
+      },
+      tex: {
+        packages: { '[+]': ['xypic'] }
+      },
+      startup: { typeset: false }
+    };
+    loadScript(['assets/mathjax/tex-chtml-full.js'], function(ok){
+      if (!ok){
+        xyStarted = false;
+        var failed = xyWaiters.splice(0);
+        failed.forEach(function(cb){ cb(false); });
+        return;
       }
+      var ready = window.MathJax && window.MathJax.startup && window.MathJax.startup.promise;
+      Promise.resolve(ready).then(function(){
+        xyReady = true;
+        var waiting = xyWaiters.splice(0);
+        waiting.forEach(function(cb){ cb(true); });
+      }).catch(function(){
+        xyStarted = false;
+        var failed = xyWaiters.splice(0);
+        failed.forEach(function(cb){ cb(false); });
+      });
+    });
+  }
+
+  function renderXy(el){
+    if (!el || !el.querySelectorAll) return;
+    var slots = Array.prototype.slice.call(el.querySelectorAll('.xy-diagram[data-xy]'));
+    if (!slots.length) return;
+    loadXy(function(ok){
+      if (!ok){
+        slots.forEach(function(slot){
+          slot.className += ' xy-error';
+          slot.textContent = '交换图组件加载失败。';
+        });
+        return;
+      }
+      slots.forEach(function(slot){
+        if (slot.getAttribute('data-xy-rendered') === '1') return;
+        var source = slot.getAttribute('data-xy') || '';
+        slot.removeAttribute('data-xy');
+        slot.setAttribute('data-xy-rendered', '1');
+        slot.textContent = '\\[' + source + '\\]';
+      });
+      window.MathJax.typesetPromise(slots).catch(function(err){
+        slots.forEach(function(slot){
+          slot.className += ' xy-error';
+          slot.textContent = '交换图编译失败：请检查 \\xymatrix 语法。';
+        });
+        if (window.console) console.error(err);
+      });
     });
   }
 
@@ -267,7 +319,7 @@
     load: load,
     renderMarkdown: renderMarkdown,
     renderMathIn: renderMathIn,
-    renderTikz: renderTikz,
+    renderXy: renderXy,
     loadComments: loadComments
   };
 })();

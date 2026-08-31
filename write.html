@@ -11,12 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=xy1">
 <script src="assets/i18n.js"></script>
 <script src="assets/config.js"></script>
 <script src="assets/search.js"></script>
 <script src="assets/gh.js"></script>
-<script src="assets/libs.js"></script>
+<script src="assets/libs.js?v=xy1"></script>
 </head>
 
 <body>
@@ -102,7 +102,7 @@
         <button type="button" data-cmd="math" data-tb="tb_math" title="行内公式">$x$</button>
         <button type="button" data-cmd="mathblock" data-tb="tb_mathblock" title="块级公式">$$…$$</button>
         <button type="button" data-cmd="aopsmath" data-tb="tb_aopsmath" title="AoPS 公式">[math]</button>
-        <button type="button" data-cmd="tikzcd" data-tb="tb_tikzcd" title="交换图">⇄</button>
+        <button type="button" data-cmd="xymatrix" data-tb="tb_xymatrix" title="交换图（xymatrix）">⇄</button>
         <button type="button" data-cmd="env" data-tb="tb_env" title="多行环境">env</button>
         <button type="button" data-cmd="spoiler" data-tb="tb_spoiler" data-i18n="tb_spoiler_lbl" title="隐藏解答（点击展开）">隐藏</button>
         <span class="sep"></span>
@@ -486,8 +486,8 @@
       case 'math':     wrap('$', '$', 'x^2'); break;
       case 'mathblock':blockInsert('$$\n', '\n$$', '\\frac{a}{b}'); break;
       case 'aopsmath': wrap('[math]', '[/math]', 'x^2'); break;
-      case 'tikzcd':  blockInsert('\\begin{tikzcd}\n', '\n\\end{tikzcd}\n',
-                        "A \\arrow[r, \"f\"] & B \\\\\nC \\arrow[ur, \"g\"'] & D"); break;
+      case 'xymatrix': blockInsert('\\xymatrix{\n', '\n}',
+                        "A \\ar[r]^{f} & B \\\\\nC \\ar[ur]_{g} & D"); break;
       case 'env':      blockInsert('$$\n\\begin{align*}\n', '\n\\end{align*}\n$$',
                         'a &= b + c \\\\\n  &= d'); break;
       case 'spoiler':  blockInsert('<details>\n<summary>' + I18N.t('spoiler_summary') +
@@ -513,7 +513,7 @@
       var res = window.LIBS.renderMarkdown(body, { lang: I18N.lang, macros: cfg.katexMacros || {} });
       pv.innerHTML = res.html;
       window.LIBS.renderMathIn(pv, res.macros);
-      window.LIBS.renderTikz(pv);   /* 交换图 \begin{tikzcd} */
+      window.LIBS.renderXy(pv);     /* 交换图 \xymatrix */
       var modal = $('preview-modal');
       modal.hidden = false;
       document.body.style.overflow = 'hidden';   /* 锁定背景滚动 */

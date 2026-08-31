@@ -11,12 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=xy1">
 <script src="assets/i18n.js"></script>
 <script src="assets/config.js"></script>
 <script src="assets/search.js"></script>
 <script src="assets/gh.js"></script>
-<script src="assets/libs.js"></script>
+<script src="assets/libs.js?v=xy1"></script>
 </head>
 
 <body>
@@ -243,7 +243,7 @@
         '<a class="back" href="#" id="priv-back">← ' + I18N.t('private_back') + '</a>' +
         '<h1>' + (p.title || '') + '</h1>' + meta + res.html;
       window.LIBS.renderMathIn(reader, res.macros);
-      window.LIBS.renderTikz(reader);   /* 交换图 \begin{tikzcd} */
+      window.LIBS.renderXy(reader);     /* 交换图 \xymatrix */
       document.getElementById('priv-back').addEventListener('click', function(e){
         e.preventDefault();
         reader.hidden = true;
