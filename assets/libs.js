@@ -162,12 +162,27 @@
       return escapeHtml(mathSpans[+i]);   /* & < > 转义，KaTeX 从文本节点读回原字符 */
     });
     /* DOMPurify 之后再还原 tikz 块：<script> 标签若先于 sanitize 会被剥掉。
-       转义 </script 防止内容提前闭合标签（TikZ 代码几乎不会含，防御性处理） */
+       转义 </script 防止内容提前闭合标签（TikZ 代码几乎不会含，防御性处理）。
+       把当前宏表（:::macros 定义的 \newcommand）写入 data-add-to-preamble，
+       TikZJax 会把它拼进 TeX preamble——否则 tikzcd 里的 \G、\A 等自定义宏
+       在 TikZJax 的独立 TeX 引擎里未定义，编译失败只能显示原生代码。
+       tikz-cd 需显式 \usepackage{tikz-cd}（TikZJax 内置该文件但不自动加载）。 */
+    function tikzPreamble(code){
+      var parts = [];
+      if (/\\begin\{tikzcd\}/.test(code)) parts.push('\\usepackage{tikz-cd}');
+      Object.keys(macros).forEach(function(k){
+        parts.push('\\newcommand{' + k + '}{' + macros[k] + '}');
+      });
+      return parts.join('\n');
+    }
     var clean = window.DOMPurify.sanitize(html);
     clean = clean.replace(/\u27E6T(\d+)\u27E7/g, function(_, i){
       var code = tikzBlocks[+i] || '';
       code = code.replace(/<\/script/gi, '<\\/script');
-      return '<script type="text/tikz">' + code + '</script>';
+      var pre = tikzPreamble(code);
+      return '<script type="text/tikz"' +
+        (pre ? ' data-add-to-preamble="' + escapeHtml(pre) + '"' : '') +
+        '>' + code + '</script>';
     });
     return { html: clean, macros: macros, hasTikz: tikzBlocks.length > 0 };
   }
