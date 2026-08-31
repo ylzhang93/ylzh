@@ -137,19 +137,24 @@
         </div>
         <div class="frow">
           <label data-i18n="cfg_repo">公开仓库名</label>
-          <input id="s-repo" type="text" autocomplete="off">
+          <input id="s-repo" type="text" list="s-repos" autocomplete="off">
         </div>
       </div>
       <div class="frow-inline">
         <div class="frow">
           <label data-i18n="cfg_priv">私有仓库名</label>
-          <input id="s-priv" type="text" autocomplete="off">
+          <input id="s-priv" type="text" list="s-repos" autocomplete="off">
         </div>
         <div class="frow">
           <label data-i18n="cfg_editorkey">写作口令（可选）</label>
           <input id="s-editorkey" type="text" autocomplete="off">
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:1rem;margin-top:.6rem;flex-wrap:wrap">
+        <button id="s-owner-fetch" class="btn btn-ghost" type="button" data-i18n="s_owner_fetch">从令牌获取用户名</button>
+        <button id="s-repos-fetch" class="btn btn-ghost" type="button" data-i18n="s_repos_fetch">获取我的仓库</button>
+      </div>
+      <datalist id="s-repos"></datalist>
       <div style="display:flex;align-items:center;gap:1rem;margin-top:.8rem">
         <button id="s-save" class="btn btn-ghost" type="button" data-i18n="cfg_save">保存设置</button>
         <span id="s-msg" class="filename-hint" hidden data-i18n="cfg_saved">已保存到本浏览器。</span>
@@ -830,6 +835,46 @@
     $('s-priv').value = cfg.privateRepo || '';
     $('s-editorkey').value = cfg.editorKey || '';
   }
+  function currentToken(){
+    var t = $('f-token').value.trim();
+    if (!t){ try { t = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) {} }
+    return t;
+  }
+  function ghJson(url){
+    var t = currentToken();
+    if (!t) return Promise.reject('no-token');
+    return fetch(url, {
+      headers: { 'Authorization': 'Bearer ' + t, 'Accept': 'application/vnd.github+json' }
+    }).then(function(r){ return r.json(); });
+  }
+  /* 从令牌自动获取用户名 */
+  $('s-owner-fetch').addEventListener('click', function(){
+    ghJson('https://api.github.com/user').then(function(u){
+      if (u && u.login){
+        $('s-owner').value = u.login;
+        showMsg(I18N.t('s_fetched'), 'ok');
+      } else {
+        showMsg(I18N.t('s_fetch_fail'), 'err');
+      }
+    }).catch(function(){ showMsg(I18N.t('s_fetch_fail'), 'err'); });
+  });
+  /* 获取我的仓库列表（输入时自动提示） */
+  $('s-repos-fetch').addEventListener('click', function(){
+    ghJson('https://api.github.com/user/repos?per_page=100&sort=updated').then(function(repos){
+      if (!Array.isArray(repos)){
+        showMsg(I18N.t('s_fetch_fail'), 'err');
+        return;
+      }
+      var d = $('s-repos');
+      d.innerHTML = '';
+      repos.forEach(function(r){
+        var o = document.createElement('option');
+        o.value = r.name;
+        d.appendChild(o);
+      });
+      showMsg(I18N.t('s_fetched_repos').replace('{n}', repos.length), 'ok');
+    }).catch(function(){ showMsg(I18N.t('s_fetch_fail'), 'err'); });
+  });
   $('s-save').addEventListener('click', function(){
     window.SITE_CFG.set('owner', $('s-owner').value.trim());
     window.SITE_CFG.set('repo', $('s-repo').value.trim());
