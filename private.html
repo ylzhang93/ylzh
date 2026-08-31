@@ -145,7 +145,7 @@
       .then(function(res){
         if (!res.ok){ renderList(); return; }
         try {
-          notes = JSON.parse(window.GH.decodeB64(res.j.content));
+          notes = JSON.parse(window.GH.decodeB64(res.j.content).replace(/^\uFEFF/, ''));
         } catch (e) { notes = []; }
         renderList();
       });
