@@ -6,6 +6,9 @@ window.SITE_CONFIG = {
   owner: '',
   /* 仓库名（发布到 GitHub Pages 的那个仓库） */
   repo: '',
+  /* 私有笔记仓库（独立私有仓库，public 仓库的所有分支都是公开的，私有内容必须放这里）
+     令牌需要有该仓库的读取权限（fine-grained 令牌请勾选 Contents: Read） */
+  privateRepo: '',
   /* 默认分支 */
   branch: 'main',
 
