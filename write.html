@@ -128,11 +128,13 @@
     </div>
 
     <div class="frow" style="margin-bottom:.6rem">
-      <label class="remember">
-        <input id="f-draft" type="checkbox">
-        <span data-i18n="draft_lbl">保存为草稿（访客不可见）</span>
-      </label>
-      <p class="filename-hint" data-i18n="draft_hint">草稿不会出现在列表/搜索/文章中，但文件仍在公开仓库里（GitHub Pages 免费版仓库必须公开）——如需绝对保密请勿写入。</p>
+      <label data-i18n="f_status">状态（决定内容存放的仓库）</label>
+      <select id="f-status">
+        <option value="draft" data-i18n="status_draft">草稿（私有仓库，不显示）</option>
+        <option value="private" data-i18n="status_private">私有（私有仓库，仅你能看）</option>
+        <option value="public" data-i18n="status_public">公开（发布到博客）</option>
+      </select>
+      <p class="filename-hint" data-i18n="status_hint">草稿与私有存放在私有仓库 ylzh-private，公开后才进入 ylzh；保存时文件自动在两个仓库间移动。</p>
     </div>
 
     <div class="actions">
@@ -513,31 +515,76 @@
     if (e.key === 'Escape') closePreview();
   });
 
-  /* ---------- 已有文章列表 ---------- */
+  /* ---------- 已有文章列表（公开 + 私有两个仓库合并） ---------- */
   var allPosts = [];
+  function pubCfg(){ return { owner: cfg.owner, repo: cfg.repo, branch: cfg.branch }; }
+  function privCfg(){ return { owner: cfg.owner, repo: cfg.privateRepo || '', branch: cfg.branch }; }
+  function readManifest(repo, done){
+    if (!repo.repo) return done([]);
+    window.GH.api('GET', 'posts/index.json', repo, token).then(function(res){
+      if (!res.ok) return done([]);
+      try { done(JSON.parse(window.GH.decodeB64(res.j.content).replace(/^\uFEFF/, ''))); }
+      catch (e) { done([]); }
+    });
+  }
+  function writeManifest(repo, entries, done){
+    window.GH.api('GET', 'posts/index.json', repo, token).then(function(res){
+      window.GH.api('PUT', 'posts/index.json', repo, token, {
+        message: 'update posts/index.json',
+        content: window.GH.encodeB64(JSON.stringify(entries, null, 2) + '\n'),
+        sha: res.ok ? res.j.sha : null,
+        branch: repo.branch
+      }).then(function(r){ done(r.ok, r.ok ? '' : (r.j.message || '')); });
+    });
+  }
+  /* 更新清单：remove=true 删除该文件条目；否则写入 entry */
+  function updateManifest(repo, file, entry, remove, done){
+    readManifest(repo, function(entries){
+      entries = entries.filter(function(x){ return x.file !== file; });
+      if (!remove && entry){
+        entries.push(entry);
+        entries.sort(function(a, b){ return (a.date < b.date) ? 1 : (a.date > b.date ? -1 : 0); });
+      }
+      writeManifest(repo, entries, done);
+    });
+  }
+  function statusBadge(p){
+    if (p.repo === 'public') return I18N.t('status_public');
+    return (p.status === 'draft' ? I18N.t('draft_badge') : I18N.t('status_private'));
+  }
   function loadExistingList(done){
-    fetch('posts/index.json', { cache: 'no-cache' })
-      .then(function(r){ return r.ok ? r.json() : []; })
-      .catch(function(){ return []; })
-      .then(function(posts){
-        allPosts = Array.isArray(posts) ? posts : [];
-        var sel = $('f-existing');
-        allPosts.forEach(function(p){
-          var o = document.createElement('option');
-          o.value = p.file;
-          o.textContent = (p.title_en || p.title || p.file) + '  ·  ' + p.date +
-            (p.draft ? '  [' + I18N.t('draft_badge') + ']' : '');
-          sel.appendChild(o);
-        });
-        /* 标签建议 */
-        var d = $('tag-suggestions');
-        window.Search.distinctTags(allPosts).forEach(function(t){
-          var o = document.createElement('option');
-          o.value = t.tag;
-          d.appendChild(o);
-        });
-        if (done) done();
+    Promise.all([
+      /* 公开仓库清单（无需令牌即可读） */
+      fetch('posts/index.json', { cache: 'no-cache' })
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .catch(function(){ return []; }),
+      /* 私有仓库清单（需令牌） */
+      new Promise(function(resolve){
+        readManifest(privCfg(), function(priv){ resolve(priv); });
+      })
+    ]).then(function(res){
+      allPosts = [];
+      var pub = Array.isArray(res[0]) ? res[0] : [];
+      var priv = Array.isArray(res[1]) ? res[1] : [];
+      pub.forEach(function(p){ allPosts.push(Object.assign({}, p, { repo: 'public' })); });
+      priv.forEach(function(p){ allPosts.push(Object.assign({}, p, { repo: 'private' })); });
+      var sel = $('f-existing');
+      allPosts.forEach(function(p){
+        var o = document.createElement('option');
+        o.value = p.file;
+        o.textContent = (p.title_en || p.title || p.file) + '  ·  ' + p.date +
+          '  [' + statusBadge(p) + ']';
+        sel.appendChild(o);
       });
+      /* 标签建议 */
+      var d = $('tag-suggestions');
+      window.Search.distinctTags(allPosts).forEach(function(t){
+        var o = document.createElement('option');
+        o.value = t.tag;
+        d.appendChild(o);
+      });
+      if (done) done();
+    });
   }
 
   /* ---------- 新建 / 重置表单 ---------- */
@@ -552,7 +599,7 @@
     tags = [];
     renderChips();
     $('btn-delete').hidden = true;
-    $('f-draft').checked = false;
+    $('f-status').value = 'draft';   /* 新文章默认草稿（私有仓库） */
     closePreview();
     $('preview-body').innerHTML = '';
     updateFilename();
@@ -564,18 +611,29 @@
       resetForm();
       return;
     }
-    fetch(file, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.text() : ''; }).then(function(md){
-      var p = null;
-      allPosts.forEach(function(x){ if (x.file === file) p = x; });
-      var m = file.match(/^posts\/(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
-      editing = { file: file, date: p ? p.date : (m ? m[1] : new Date().toISOString().slice(0,10)) };
+    var p = null;
+    allPosts.forEach(function(x){ if (x.file === file) p = x; });
+    var m = file.match(/^posts\/(\d{4}-\d{2}-\d{2})-(.+)\.md$/);
+    var loadMd = (p && p.repo === 'private')
+      ? window.GH.api('GET', file, privCfg(), token).then(function(res){
+          return res.ok ? window.GH.decodeB64(res.j.content) : '';
+        })
+      : fetch(file, { cache: 'no-cache' }).then(function(r){ return r.ok ? r.text() : ''; });
+    loadMd.then(function(md){
+      editing = {
+        file: file,
+        date: p ? p.date : (m ? m[1] : new Date().toISOString().slice(0, 10)),
+        repo: p ? p.repo : 'public'
+      };
       $('f-title').value = p ? (p.title || '') : '';
       $('f-title-en').value = p ? (p.title_en || '') : '';
       $('f-slug').value = m ? m[2] : '';
       slugTouched = true;
       tags = p && Array.isArray(p.tags) ? p.tags.slice() : [];
       renderChips();
-      $('f-draft').checked = !!(p && p.draft);
+      $('f-status').value = (p && p.repo === 'private')
+        ? (p.status === 'draft' ? 'draft' : 'private')
+        : 'public';
       $('f-body').value = md;
       $('btn-delete').hidden = false;
       updateFilename();
@@ -595,7 +653,7 @@
            (editing ? editing.file : 'post');
   }
 
-  /* ---------- 保存发布（GitHub Contents API，见 assets/gh.js） ---------- */
+  /* ---------- 保存（状态决定仓库；跨仓库时自动移动文件） ---------- */
   $('btn-save').addEventListener('click', save);
   function save(){
     token = $('f-token').value.trim();
@@ -612,86 +670,120 @@
       try { localStorage.setItem(TOKEN_KEY, token); } catch (e) {}
     }
 
+    var status = $('f-status').value;              /* draft | private | public */
     var date = editing ? editing.date : today();
     var slug = $('f-slug').value.trim() || window.Search.slugify(title) || 'post';
     var file = 'posts/' + date + '-' + slug + '.md';
+    var target = (status === 'public') ? pubCfg() : privCfg();
+    if (!target.repo){
+      showMsg(I18N.t(status === 'public' ? 'need_repo' : 'need_priv_repo'), 'err');
+      return;
+    }
+    /* 来源仓库：新文章 null；已有文章按加载时记录的 repo */
+    var oldRepo = null;
+    if (editing){
+      oldRepo = (editing.repo === 'private') ? privCfg() : pubCfg();
+      if (!oldRepo.repo){ showMsg(I18N.t('need_priv_repo'), 'err'); return; }
+    }
+    var moving = oldRepo && oldRepo.repo !== target.repo;
+
+    var mdBody = body.replace(/\n*$/, '') + '\n';
+    var entry = { file: file, title: title, date: date };
+    var te = $('f-title-en').value.trim();
+    if (te) entry.title_en = te;
+    entry.tags = tags.slice();
+    if (status !== 'public') entry.status = status;   /* 草稿/私有带状态标记；公开不带 */
 
     showMsg('…', 'ok');
 
-    (function saveLoop(baseFile, n){
-      var path = n > 1 ? baseFile.replace(/\.md$/, '-' + n + '.md') : baseFile;
-      window.GH.api('GET', path, cfg, token).then(function(res){
-        if (!editing && res.ok){
-          saveLoop(baseFile, n + 1);            /* 新文章重名 → 追加序号 */
+    /* 写入目标仓库 md 文件（新建或更新） */
+    window.GH.api('GET', file, target, token).then(function(getRes){
+      /* 新文章重名 → 自动追加序号（仅目标仓库内检查） */
+      if (!editing && getRes.ok){
+        saveLoop(file, 2);
+        return;
+      }
+      window.GH.api('PUT', file, target, token, {
+        message: (editing ? 'update' : 'add') + ': ' + file,
+        content: window.GH.encodeB64(mdBody),
+        sha: getRes.ok ? getRes.j.sha : null,
+        branch: target.branch
+      }).then(function(putRes){
+        if (!putRes.ok){
+          showMsg(I18N.t('save_fail') + ' ' + escapeHtml(putRes.j.message || ''), 'err');
           return;
         }
-        var sha = res.ok ? res.j.sha : null;
-        var mdBody = body.replace(/\n*$/, '') + '\n';
-        window.GH.api('PUT', path, cfg, token, {
-          message: msgForCommit('add'),
+        updateManifest(target, file, entry, false, function(ok, msg){
+          if (!ok){
+            showMsg(I18N.t('save_fail') + ' ' + escapeHtml(msg || ''), 'err');
+            return;
+          }
+          if (moving && oldRepo){
+            /* 跨仓库移动：删除旧仓库中的文件 + 旧清单条目 */
+            window.GH.api('GET', file, oldRepo, token).then(function(gr){
+              window.GH.api('DELETE', file, oldRepo, token, {
+                message: 'move: ' + file,
+                sha: gr.ok ? gr.j.sha : null,
+                branch: oldRepo.branch
+              }).then(function(dr){
+                updateManifest(oldRepo, file, null, true, function(ok2){
+                  if (!ok2){
+                    showMsg(I18N.t('save_fail') + ' 旧仓库清单更新失败：' + escapeHtml(msg || ''), 'err');
+                    return;
+                  }
+                  doneSave(file);
+                });
+              });
+            });
+          } else {
+            doneSave(file);
+          }
+        });
+      });
+    });
+
+    function saveLoop(baseFile, n){
+      var path = n > 1 ? baseFile.replace(/\.md$/, '-' + n + '.md') : baseFile;
+      window.GH.api('GET', path, target, token).then(function(res){
+        if (res.ok){ saveLoop(baseFile, n + 1); return; }
+        saveTo(path);
+      });
+      function saveTo(path){
+        window.GH.api('PUT', path, target, token, {
+          message: 'add: ' + path,
           content: window.GH.encodeB64(mdBody),
-          sha: sha || undefined,
-          branch: cfg.branch
+          sha: undefined,
+          branch: target.branch
         }).then(function(putRes){
           if (!putRes.ok){
             showMsg(I18N.t('save_fail') + ' ' + escapeHtml(putRes.j.message || ''), 'err');
             return;
           }
-          updateIndex(path, function(ok2, msg){
-            if (ok2){
-              showMsg(I18N.t('saved_ok') + ' <a href="post.html?p=' + encodeURIComponent(path) +
-                '" target="_blank">' + path + '</a>', 'ok');
-              loadExistingList();   /* 刷新已有文章下拉框 */
-            } else {
-              showMsg(I18N.t('save_fail') + ' ' + msg, 'err');
-            }
+          updateManifest(target, path, Object.assign({}, entry, { file: path }), false, function(ok, msg){
+            if (!ok){ showMsg(I18N.t('save_fail') + ' ' + escapeHtml(msg || ''), 'err'); return; }
+            doneSave(path);
           });
         });
-      });
-    })(file, 1);
-  }
-
-  function updateIndex(path, done){
-    window.GH.api('GET', 'posts/index.json', cfg, token).then(function(res){
-      var posts = res.ok ? JSON.parse(window.GH.decodeB64(res.j.content)) : [];
-      var entry = { file: path, title: $('f-title').value.trim(), date: (editing ? editing.date : today()) };
-      var te = $('f-title-en').value.trim();
-      if (te) entry.title_en = te;
-      entry.tags = tags.slice();
-      if ($('f-draft').checked){
-        entry.draft = true;
-      } else {
-        delete entry.draft;
       }
+    }
 
-      posts = posts.filter(function(p){ return p.file !== path; });
-      posts.push(entry);
-      posts.sort(function(a, b){ return (a.date < b.date) ? 1 : (a.date > b.date ? -1 : 0); });
-
-      window.GH.api('PUT', 'posts/index.json', cfg, token, {
-        message: 'update posts/index.json',
-        content: window.GH.encodeB64(JSON.stringify(posts, null, 2) + '\n'),
-        sha: res.ok ? res.j.sha : null,
-        branch: cfg.branch
-      }).then(function(r){
-        if (r.ok){
-          editing = { file: path, date: entry.date };
-          done(true, '');
-        } else {
-          done(false, escapeHtml(r.j.message || ''));
-        }
-      });
-    });
+    function doneSave(path){
+      editing = { file: path, date: date, repo: (status === 'public') ? 'public' : 'private' };
+      showMsg(I18N.t('saved_ok') + ' <a href="post.html?p=' + encodeURIComponent(path) +
+        '" target="_blank">' + path + '</a>', 'ok');
+      loadExistingList();   /* 刷新已有文章下拉框 */
+    }
   }
 
-  /* ---------- 删除文章 ---------- */
+  /* ---------- 删除文章（按所在仓库删除） ---------- */
   $('btn-delete').addEventListener('click', function(){
     if (!editing) return;
     token = $('f-token').value.trim();
     if (!token){ showMsg(I18N.t('need_token'), 'err'); return; }
     if (!window.confirm(I18N.t('del_confirm'))) return;
 
-    window.GH.deletePost(cfg, token, editing.file, function(ok, msg){
+    var repo = (editing.repo === 'private') ? privCfg() : pubCfg();
+    window.GH.deletePost(repo, token, editing.file, function(ok, msg){
       if (!ok){
         showMsg(I18N.t('save_fail') + ' ' + escapeHtml(msg || ''), 'err');
         return;

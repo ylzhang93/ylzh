@@ -68,12 +68,11 @@ def save_manifest(posts):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="新建一篇数学博客文章")
+    ap = argparse.ArgumentParser(description="新建一篇数学博客文章（公开文章用命令行；草稿/私有请在网页编辑器写，自动存入私有仓库）")
     ap.add_argument("title", help="文章标题")
     ap.add_argument("--title-en", default="", help="可选：英文标题（语言切换时显示）")
     ap.add_argument("--tags", default="", help="逗号分隔的标签，如：代数几何,笔记")
     ap.add_argument("--slug", default="", help="可选的文件名 slug（默认由标题生成）")
-    ap.add_argument("--draft", action="store_true", help="保存为草稿（不在博客列表显示，访客不可见）")
     args = ap.parse_args()
 
     title = args.title.strip()
@@ -112,8 +111,6 @@ def main():
     }
     if args.title_en.strip():
         entry["title_en"] = args.title_en.strip()
-    if args.draft:
-        entry["draft"] = True
     posts.append(entry)
     save_manifest(posts)
 
@@ -122,9 +119,10 @@ def main():
     print("  标题   ", title)
     if args.title_en.strip():
         print("  英文标题", args.title_en.strip())
-    print("  状态   ", "草稿（访客不可见）" if args.draft else "已发布")
     print("  日期   ", date)
     print("  标签   ", ", ".join(tags) if tags else "（无）")
+    print()
+    print("提示：草稿/私有文章请在网页编辑器（write.html）写，状态选「草稿/私有」会自动存入私有仓库。")
     print()
     print("下一步：")
     print("  1. 编辑上面的 .md 文件，用 Markdown + $...$ 写公式")

@@ -328,17 +328,32 @@
     });
   }
 
-  /* 站长可见：草稿提示 */
+  /* 站长可见：草稿提示（草稿在私有仓库中，需令牌读取） */
   function refreshDraftNote(){
     var dn = document.getElementById('draft-note');
     if (!dn) return;
-    if (isOwner() && drafts.length){
-      dn.hidden = false;
-      dn.innerHTML = '<a href="write.html">' +
-        I18N.t('draft_count').replace('{n}', drafts.length) + '</a>';
-    } else {
+    if (!isOwner()){
       dn.hidden = true;
+      return;
     }
+    var t = '';
+    try { t = localStorage.getItem('zyl-token') || ''; } catch (e) {}
+    if (!cfg.privateRepo || !t){ dn.hidden = true; return; }
+    window.GH.api('GET', 'posts/index.json',
+      { owner: cfg.owner, repo: cfg.privateRepo, branch: cfg.branch }, t)
+      .then(function(res){
+        if (!res.ok){ dn.hidden = true; return; }
+        var notes = [];
+        try { notes = JSON.parse(window.GH.decodeB64(res.j.content).replace(/^\uFEFF/, '')); } catch (e) {}
+        var drafts = notes.filter(function(p){ return p.status === 'draft'; }).length;
+        if (drafts){
+          dn.hidden = false;
+          dn.innerHTML = '<a href="write.html">' +
+            I18N.t('draft_count').replace('{n}', drafts) + '</a>';
+        } else {
+          dn.hidden = true;
+        }
+      });
   }
 
   /* ---------- 语言切换 ---------- */
@@ -358,9 +373,7 @@
     .then(function(r){ return r.ok ? r.json() : []; })
     .catch(function(){ return []; })
     .then(function(data){
-      var all = Array.isArray(data) ? data : [];
-      drafts = all.filter(function(p){ return p.draft; });
-      posts = all.filter(function(p){ return !p.draft; });
+      posts = Array.isArray(data) ? data : [];
       var pc = document.getElementById('post-count');
       if (pc) pc.textContent = I18N.t('post_count').replace('{n}', posts.length);
       refreshDraftNote();

@@ -161,12 +161,14 @@
     $('priv-reader').hidden = true;
 
     var shown = notes.filter(function(p){
+      if ((p.status || 'private') === 'draft') return false;   /* 草稿不在私有空间显示 */
       if (!state.q) return true;
       var c = contentCache[p.file];
       return window.Search.matchPost(p, c || null, state.q);
     });
 
-    $('priv-count').textContent = I18N.t('post_count').replace('{n}', notes.length);
+    var visible = notes.filter(function(p){ return (p.status || 'private') !== 'draft'; });
+    $('priv-count').textContent = I18N.t('post_count').replace('{n}', visible.length);
     if (!shown.length){
       $('priv-empty').hidden = false;
       return;
