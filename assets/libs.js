@@ -34,12 +34,19 @@
   var tikzStarted = false;   /* TikZJax 是否已加载（懒加载，有 tikz 块才触发） */
 
   /* TikZJax fork：MutationObserver 自动渲染动态插入的 <script type="text/tikz">
-     资源（run-tex.js / tex.wasm.gz / core.dump.gz / fonts）与其同目录，故两 CDN 都指向 dist/ */
+     资源（run-tex.js / tex.wasm.gz / core.dump.gz / fonts）与其同目录。
+     已自托管到本站 assets/tikzjax/（本地服务器 & GitHub Pages 同源加载，
+     不依赖 jsdelivr/unpkg 等第三方 CDN，预览/线上都稳定）；
+     外部 CDN 仅作后备。 */
   var TIKZ_URLS = [
+    'assets/tikzjax/tikzjax.js',
     'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js',
     'https://unpkg.com/@drgrice1/tikzjax@1.0.0-beta24/dist/tikzjax.js'
   ];
-  var TIKZ_CSS_BASE = 'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/';
+  var TIKZ_CSS = [
+    'assets/tikzjax/fonts.css',
+    'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist/fonts.css'
+  ];
 
   /* 加载 marked + dompurify + katex + auto-render，done(ok) */
   function load(done){
@@ -205,19 +212,24 @@
 
   /* 懒加载 TikZJax 并渲染容器内的 <script type="text/tikz"> 块。
      该 fork 用 MutationObserver 监听 body：加载后新插入的 tikz 块自动渲染；
-     加载时已有的块也会被扫描处理，所以只需保证 tikzjax.js 在 script 插入后加载。 */
+     加载时已有的块也会被扫描处理，所以只需保证 tikzjax.js 在 script 插入后加载。
+     资源优先从本站 assets/tikzjax/ 加载（本地预览 & GitHub Pages 同源，稳定），
+     失败才回退第三方 CDN。 */
   function renderTikz(el){
     if (!el || !el.querySelector) return;
     if (!el.querySelector('script[type="text/tikz"]')) return;
     if (tikzStarted) return;               /* 已加载：observer 自动接管后续块 */
     tikzStarted = true;
-    /* TeX 字体：引入 CDN 上的 fonts.css（内部 url() 按 CSS 自身地址解析，无需改写） */
-    var l = document.createElement('link');
-    l.rel = 'stylesheet';
-    l.href = TIKZ_CSS_BASE + 'fonts.css';
-    document.head.appendChild(l);
+    /* TeX 字体：引入 fonts.css（内部 url('fonts/…') 按 CSS 自身地址解析，
+       自托管时解析到本站 assets/tikzjax/fonts/，无需改写） */
+    loadCss(TIKZ_CSS[0]);
     loadScript(TIKZ_URLS, function(ok){
-      if (!ok) tikzStarted = false;        /* 全部 CDN 失败：允许下次重试 */
+      if (!ok){                             /* 本地失败 → 回退 CDN */
+        loadCss(TIKZ_CSS[1]);
+        loadScript(TIKZ_URLS.slice(1), function(ok2){
+          if (!ok2) tikzStarted = false;    /* 全部失败：允许下次重试 */
+        });
+      }
     });
   }
 
