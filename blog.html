@@ -44,6 +44,7 @@
   </div>
 
   <div id="tagbar" class="tagbar" hidden></div>
+  <p id="draft-note" class="draft-note" hidden></p>
 
   <p id="searching" class="empty" hidden data-i18n="searching">搜索中…</p>
   <ol id="post-list" class="post-list"></ol>
@@ -65,8 +66,9 @@
   document.getElementById('year').textContent = new Date().getFullYear();
 
   var posts = [];
-  var mdCache = {};                    /* file -> 全文（首次搜索时按需加载） */
-  var state = { q: '', tags: [] };     /* 当前搜索词 / 选中的标签 */
+  var drafts = [];                  /* 草稿（仅站长可见提示） */
+  var mdCache = {};                 /* file -> 全文（首次搜索时按需加载） */
+  var state = { q: '', tags: [] };  /* 当前搜索词 / 选中的标签 */
   var loading = false;
   var cfg = window.SITE_CONFIG || {};
 
@@ -325,12 +327,26 @@
     });
   }
 
+  /* 站长可见：草稿提示 */
+  function refreshDraftNote(){
+    var dn = document.getElementById('draft-note');
+    if (!dn) return;
+    if (isOwner() && drafts.length){
+      dn.hidden = false;
+      dn.innerHTML = '<a href="write.html">' +
+        I18N.t('draft_count').replace('{n}', drafts.length) + '</a>';
+    } else {
+      dn.hidden = true;
+    }
+  }
+
   /* ---------- 语言切换 ---------- */
   window.onLangChange = function(){
     document.title = I18N.t('blog_title') + ' · zyl';
     searchInput.placeholder = I18N.t('search_ph');
     renderTagbar();
     renderList();
+    refreshDraftNote();
   };
   window.onLangChange(I18N.lang);
 
@@ -341,9 +357,12 @@
     .then(function(r){ return r.ok ? r.json() : []; })
     .catch(function(){ return []; })
     .then(function(data){
-      posts = Array.isArray(data) ? data : [];
+      var all = Array.isArray(data) ? data : [];
+      drafts = all.filter(function(p){ return p.draft; });
+      posts = all.filter(function(p){ return !p.draft; });
       var pc = document.getElementById('post-count');
       if (pc) pc.textContent = I18N.t('post_count').replace('{n}', posts.length);
+      refreshDraftNote();
       renderTagbar();
       ensureContent();
       renderList();

@@ -127,6 +127,13 @@
       <p class="filename-hint"><a id="token-link" href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" data-i18n="token_link">创建令牌 →</a></p>
     </div>
 
+    <div class="frow" style="margin-bottom:.6rem">
+      <label class="remember">
+        <input id="f-draft" type="checkbox">
+        <span data-i18n="draft_lbl">保存为草稿（访客不可见）</span>
+      </label>
+    </div>
+
     <div class="actions">
       <button id="btn-preview" class="btn btn-ghost" type="button" data-i18n="btn_preview">预览</button>
       <button id="btn-save" class="btn" type="button" data-i18n="btn_save">保存发布</button>
@@ -517,7 +524,8 @@
         allPosts.forEach(function(p){
           var o = document.createElement('option');
           o.value = p.file;
-          o.textContent = (p.title_en || p.title || p.file) + '  ·  ' + p.date;
+          o.textContent = (p.title_en || p.title || p.file) + '  ·  ' + p.date +
+            (p.draft ? '  [' + I18N.t('draft_badge') + ']' : '');
           sel.appendChild(o);
         });
         /* 标签建议 */
@@ -543,6 +551,7 @@
     tags = [];
     renderChips();
     $('btn-delete').hidden = true;
+    $('f-draft').checked = false;
     closePreview();
     $('preview-body').innerHTML = '';
     updateFilename();
@@ -565,6 +574,7 @@
       slugTouched = true;
       tags = p && Array.isArray(p.tags) ? p.tags.slice() : [];
       renderChips();
+      $('f-draft').checked = !!(p && p.draft);
       $('f-body').value = md;
       $('btn-delete').hidden = false;
       updateFilename();
@@ -647,6 +657,11 @@
       var te = $('f-title-en').value.trim();
       if (te) entry.title_en = te;
       entry.tags = tags.slice();
+      if ($('f-draft').checked){
+        entry.draft = true;
+      } else {
+        delete entry.draft;
+      }
 
       posts = posts.filter(function(p){ return p.file !== path; });
       posts.push(entry);

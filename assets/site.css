@@ -288,6 +288,13 @@ article.post a:hover{border-bottom-color:var(--accent)}
 }
 mark{background:rgba(47,74,107,.16);color:inherit;padding:0 .12em;border-radius:2px}
 
+/* 草稿提示（站长可见） */
+.draft-note{
+  margin:-.6rem 0 1.4rem;font-size:.85rem;color:var(--ink-soft);font-style:italic;
+}
+.draft-note a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(47,74,107,.35)}
+.draft-note a:hover{border-bottom-color:var(--accent)}
+
 /* ---------- 写作页（站长专用） ---------- */
 .write-wrap{max-width:46rem;margin:0 auto;padding:0 1.5rem}
 .gate{

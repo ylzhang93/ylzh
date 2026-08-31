@@ -90,6 +90,13 @@
   window.onLangChange = function(){
     if (!state.file) return;
     var entry = state.entry;
+    /* 草稿页：不显示标题与前后篇（站长用编辑器预览） */
+    if (entry && entry.draft){
+      document.title = I18N.t('post_draft') + ' · zyl';
+      var nv = document.getElementById('post-nav');
+      if (nv) nv.innerHTML = '';
+      return;
+    }
     var title = entry ? titleFor(entry)
                       : ((state.md.match(/^#\s+(.+)$/m) || ['', I18N.t('no_post')])[1]).trim();
     document.title = title + ' · zyl';
@@ -145,6 +152,12 @@
         state.md = res[1];
         state.entry = null;
         state.posts.forEach(function(x){ if (x && x.file === file) state.entry = x; });
+
+        /* 草稿：不渲染，显示未发布提示（站长用编辑器预览） */
+        if (state.entry && state.entry.draft){
+          article.innerHTML = '<p class="empty">' + I18N.t('post_draft') + '</p>';
+          return;
+        }
 
         var md = res[1];
         /* 清单里有标题时，去掉正文开头重复的 # 标题（避免双标题） */
