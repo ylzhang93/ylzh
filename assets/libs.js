@@ -97,7 +97,17 @@
     Object.keys(base).forEach(function(k){ macros[k] = base[k]; });
     var mathSpans = [];
     var legacyTikz = [];  /* 仅用于提示迁移，不再加载浏览器 TeX/WASM */
-    var xyBlocks = [];     /* \xymatrix{...}：交给 MathJax + XyJax-v3 */
+    var xyBlocks = [];    /* \xymatrix{...}：交给 MathJax + XyJax-v3 */
+    var thmSeq = 0;       /* 声明类环境共享编号：theorem/lemma/…/claim 连续计数 */
+    function thmHead(type, title){
+      var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
+      var num = '';
+      /* proof/remark 不占号；其余声明类公用一套连续编号 */
+      if (type !== 'proof' && type !== 'remark') num = ' ' + (++thmSeq);
+      var t = (title || '').trim();
+      return '<div class="thm-head"><span class="thm-label">' + label + num + '</span>' +
+        (t ? '<span class="thm-title">' + escapeHtml(t) + '</span>' : '') + '</div>';
+    }
     function protectSeg(seg){
       /* 自定义宏 :::macros ... ::: 块：解析并移除（不渲染） */
       seg = seg.replace(/^:::macros[ \t]*\n([\s\S]*?)^:::[ \t]*\n?/gm, function(_, body){
@@ -140,20 +150,12 @@
       });
       /* 定理环境 :::theorem ... ::: → 带编号的卡片 */
       seg = seg.replace(THM_RE, function(_, type, title, body){
-        var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
-        var t = (title || '').trim();
-        var head = '<div class="thm-head">' + label +
-          (t ? '<span class="thm-title">' + escapeHtml(t) + '</span>' : '') + '</div>';
-        return '<div class="thm thm-' + type + '">' + head + '\n\n' +
+        return '<div class="thm thm-' + type + '">' + thmHead(type, title) + '\n\n' +
           body.trim() + '\n\n</div>';
       });
       /* LaTeX 风格 \begin{theorem}[标题] ... \end{theorem} → 同样转成卡片 */
       seg = seg.replace(THM_LATEX_RE, function(_, type, title, body){
-        var label = (THM_LABELS[lang] || THM_LABELS.zh)[type] || type;
-        var t = (title || '').trim();
-        var head = '<div class="thm-head">' + label +
-          (t ? '<span class="thm-title">' + escapeHtml(t) + '</span>' : '') + '</div>';
-        return '<div class="thm thm-' + type + '">' + head + '\n\n' +
+        return '<div class="thm thm-' + type + '">' + thmHead(type, title) + '\n\n' +
           body.trim() + '\n\n</div>';
       });
       seg = seg.replace(/\[math\]\s*([\s\S]*?)\s*\[\/math\]/g, function(_, inner){
