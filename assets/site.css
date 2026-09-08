@@ -393,7 +393,8 @@ article.post .thm-head{
   letter-spacing:.18em;color:var(--accent);margin-bottom:.75rem;
 }
 article.post .thm-title{
-  color:var(--ink-soft);font-weight:400;letter-spacing:.02em;margin-left:.6em;
+  color:var(--ink);font-weight:600;letter-spacing:.02em;
+  margin-left:.7em;font-size:.9rem;
 }
 article.post .thm > p:last-child{margin-bottom:0}
 article.post .thm-proof::after{
