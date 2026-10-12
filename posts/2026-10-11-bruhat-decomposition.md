@@ -67,7 +67,25 @@ Assume $\ell(w)\leq \ell(w')$.
 
 If $\ell(w)=0$, $Bw'B\neq B$ (since $w'\notin B$).
 
-If $\ell(w)>0$, find $s\in S$, such that $\ell(sw)=\ell(w)-1$. Then $$\ell(sw)<\ell(w)\leq\ell(w')\qquad \text{ and}\quad sw\neq sw'.$$ By induction, $$BswB\neq Bw'B\quad \text{ and} \quad BswB\neq Bsw'B.$$ Then $BswB\cap BsB.Bw'B=\emptyset$, since $BsB.Bw'B\subset Bw'B\cup Bsw'B$. 
+If $\ell(w)>0$, find $s\in S$, such that $\ell(sw)=\ell(w)-1$. Then 
 
-$Bsw'B\subset BsB.Bw'B$, then $BswB\neq Bsw'B=\emptyset$.
+$$\ell(sw)<\ell(w)\leq\ell(w')\qquad \text{ and}\quad sw\neq sw'.$$
+
+By induction, 
+
+$$BswB\neq Bw'B\quad \text{ and} \quad BswB\neq Bsw'B.$$
+
+If $BwB=Bw'B$, we have $BsB.BwB=BsB.Bw'B$, and
+
+
+$$
+\begin{align*}
+BswB = & BswB \cap BsB.BwB\\
+     = & BswB \cap BsB.Bw'B\\
+     \subseteq & BswB \cap (Bw'B \cup Bsw'B)\\
+     = & \emptyset.
+\end{align*}
+$$
+
+Contradiction, so $BwB\neq Bw'B$.
 :::
