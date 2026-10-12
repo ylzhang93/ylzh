@@ -2,7 +2,7 @@
 \newcommand{\SL}{\mathsf{SL}}
 :::
 :::Lemma
-If $c\neq 0$, we have
+If $c\neq 0$, and $ad-bc=1$, we have
 $$
 \begin{pmatrix}
 a & b\\ c & d
@@ -58,7 +58,7 @@ $$
 The next lemma finishes the proof.
 :::
 :::lemma
-It is left to show that if $w\neq w'$, $BwB\neq Bw'B$.
+If $w\neq w'$, $BwB\neq Bw'B$.
 :::
 :::proof
 Induction on the length of $\inf(\ell(w), \ell(w'))$. 
